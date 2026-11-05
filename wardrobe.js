@@ -286,7 +286,7 @@ function buildAudio(){Object.keys(SND).forEach(function(k){var a=new Audio();a.p
 function playStep(){if(!soundOn||!STEPS.length)return;var a=STEPS[stepI++%3];try{a.currentTime=0}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){})}
 function play(k){if(!soundOn)return;var a=AUD[k];if(!a)return;try{a.pause();a.currentTime=0}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){})}
 var SILENT="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
-function unlockSpeech(){try{speechEl.src=SILENT;var p=speechEl.play();if(p&&p.catch)p.catch(function(){})}catch(e){}}
+function unlockSpeech(){try{speechEl.src=SILENT;speechEl.__u=null;var p=speechEl.play();if(p&&p.then)p.then(function(){cueVoice("clean")}).catch(function(){cueVoice("clean")})}catch(e){}}
 function unlock(){unlockSpeech();Object.keys(AUD).map(function(k){return AUD[k]}).concat(STEPS).forEach(function(a){a.muted=true;var p=a.play();if(p&&p.then)p.then(function(){a.pause();a.currentTime=0;a.muted=false}).catch(function(){a.muted=false});else a.muted=false})}
 
 /* ───────── анимации ───────── */
@@ -471,15 +471,18 @@ var ALL_AUDIO=Object.keys(SND).map(function(k){return SND[k]}).concat(Object.key
 var speechEl=new Audio();speechEl.preload="auto";
 /* играет фразу и возвращает её длину в секундах */
 function voice(key,text){var v=VOICE[key];say(text||"");if(!v)return voiceLen(text||"");
-  try{speechEl.pause();speechEl.src=srcFor(v.url);speechEl.currentTime=0}catch(e){}var p=speechEl.play();if(p&&p.catch)p.catch(function(){});return v.len}
+  cueVoice(key);try{speechEl.pause();speechEl.currentTime=0}catch(e){}var p=speechEl.play();if(p&&p.catch)p.catch(function(){});return v.len}
+/* следующую фразу грузим в плеер заранее: на iPad смена src перед play даёт задержку */
+function cueVoice(key){var v=VOICE[key];if(!v)return;var u=srcFor(v.url);if(speechEl.__u===u)return;try{speechEl.pause();speechEl.src=u;speechEl.__u=u;speechEl.load()}catch(e){}}
 /* ждём по самой записи: cb — за lead секунд до конца фразы (если звук начался позже, анимация подождёт) */
 var vWait=null;
-function waitVoice(key,text,lead,cb){var v=VOICE[key],len=voice(key,text);if(!v){later(Math.max(.2,len-lead),cb);return}
-  vWait={end:v.len-lead,until:clock+len+2,cb:cb}}
+function waitVoice(key,text,lead,cb,onStart){var v=VOICE[key],len=voice(key,text);if(!v){if(onStart)onStart();later(Math.max(.2,len-lead),cb);return}
+  vWait={end:v.len-lead,until:clock+len+2,cb:cb,start:onStart,t0:clock}}
 function checkVoice(){if(!vWait)return;var w=vWait,t=0;try{t=speechEl.currentTime}catch(e){}
+  if(w.start&&(t>.03||clock>w.t0+.6)){var s0=w.start;w.start=null;s0()}
   if(speechEl.ended||t>=w.end||clock>w.until){vWait=null;w.cb()}}
 function praise(){var v=PRAISE[Math.floor(Math.random()*PRAISE.length)];say("Похвала (общая запись)");
-  try{speechEl.pause();speechEl.src=srcFor(v.url);speechEl.currentTime=0}catch(e){}var p=speechEl.play();if(p&&p.catch)p.catch(function(){});return v.len}
+  try{speechEl.pause();speechEl.src=srcFor(v.url);speechEl.__u=null;speechEl.currentTime=0}catch(e){}var p=speechEl.play();if(p&&p.catch)p.catch(function(){});return v.len}
 function introClear(){intro.tok++;intro.items.forEach(function(it){dropObj(it.o)});intro.items=[];
   if(intro.girl){intro.girl.root.remove();intro.girl=null}if(intro.finw){intro.finw.remove();intro.finw=null}}
 function introHintTarget(){return null}
@@ -499,8 +502,8 @@ function introPair(){var tk=intro.tok;intro.items.forEach(function(it){dropObj(i
     function goBack(){if(!heard||!grown||tk!==intro.tok)return;heard=false;
       anim(.45,function(u){var e=eio(u);o.x=lerp(tx,it.x,e);o.y=lerp(520,560,e);o.s=lerp(1.95,1.25,e);setT(o);dim(other.o,.45+.55*e)},function(){
         if(tk===intro.tok)later(.3,done)})}
-    waitVoice(it.key,it.line,.45,function(){heard=true;goBack()});
-    anim(.45,function(u){var e=eio(u);o.x=lerp(it.x,tx,e);o.y=lerp(560,520,e);o.s=lerp(1.25,1.95,e);setT(o);dim(other.o,1-.55*e)},function(){grown=true;goBack()})}}
+    waitVoice(it.key,it.line,.45,function(){heard=true;goBack()},function(){
+      anim(.45,function(u){var e=eio(u);o.x=lerp(it.x,tx,e);o.y=lerp(560,520,e);o.s=lerp(1.25,1.95,e);setT(o);dim(other.o,1-.55*e)},function(){grown=true;goBack()})})}}
 
 /* ── сценка в конце знакомства: девочка ── */
 var SKIN="#FFE0CF",SKIN_D="#FBC8BE",HAIR="#FFD326",TANK="#CBF0A4",SHORTS="#6B91D5",SHOE="#FE88A8",SHOE_D="#E6615C",TIE="#FC3529",GS=1.25,GY=880;
@@ -680,6 +683,7 @@ var mode="game";
 
 /* ───────── загрузка, старт, кнопки, музыка (логика интерфейса — как в «Повелительном наклонении») ───────── */
 function $id(id){return document.getElementById(id)}
+function mark(){}
 var game=GAME,started=false,loadedReady=false;
 /* фоновая музыка — общие дорожки, по кругу; на сценке с девочкой и на звёздах пауза */
 var MUSIC_FILES=["Music.m4a","Music2.m4a"].map(function(f){return G2+f}),musicEl=new Audio(),musicOn=true,musicIdx=0,musicWant=false,musicHold=false;
@@ -697,12 +701,12 @@ window.addEventListener("pagehide",pauseBg);
 /* предзагрузка → полоска собачки; музыка качается фоном и в полосу не входит */
 var loaded=0,total=0,loadRevealed=false;
 function tick(){loaded++;if(window.__uzorProgress)window.__uzorProgress(loaded/total);if(loaded>=total){if(window.__uzorFinish)window.__uzorFinish(revealStart);else setTimeout(revealStart,300)}}
-function revealStart(){if(loadRevealed)return;loadRevealed=true;onLoaded()}
+function revealStart(){if(loadRevealed)return;loadRevealed=true;buildAudio();onLoaded()}
 (function(){var urls=ALL_AUDIO.slice(),imgs=[STAR_URL];total=urls.length+imgs.length;
   urls.forEach(function(u){fetch(u).then(function(r){if(!r.ok)throw 0;return r.blob()}).then(function(b){try{objUrls[u]=URL.createObjectURL(b)}catch(e){}tick()}).catch(function(){tick()})});
   imgs.forEach(function(u){var im=new Image();im.onload=im.onerror=tick;im.src=u});
   MUSIC_FILES.forEach(function(u){fetch(u).then(function(r){return r.blob()}).then(function(b){try{objUrls[u]=URL.createObjectURL(b)}catch(e){}}).catch(function(){})})})();
-$id("sg-start-btn").addEventListener("click",function(){$id("sg-start-overlay").style.display="none";buildAudio();unlock();started=true;startMusic();syncMobileUI();
+$id("sg-start-btn").addEventListener("click",function(){$id("sg-start-overlay").style.display="none";unlock();started=true;startMusic();syncMobileUI();
   setTimeout(function(){applyStage(0)},600)});
 /* финальный экран */
 function showEnd(){setTimeout(function(){$id("sg-end-overlay").classList.add("sg-show")},1500)}
