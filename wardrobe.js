@@ -215,14 +215,14 @@ function makeClothes(s,dirty,parent,ex){ex=ex||{};
     flower:function(x,y,r,p){p=p||g;if(ex.wr){var w0=WP(x,y);x=w0[0];y=w0[1]}for(var i=0;i<5;i++){var a=i/5*Math.PI*2-Math.PI/2;el("circle",{cx:f1(x+Math.cos(a)*r*.62),cy:f1(y+Math.sin(a)*r*.62),r:f1(r*.5),fill:"#FFFFFF"},p)}el("circle",{cx:x,cy:y,r:f1(r*.36),fill:"#FF8725"},p)}
   };
   SHAPE[s.t](k);
-  var cg=el("g",{"clip-path":"url(#"+id+")",opacity:ex.wr?1:0},g);
+  var cg=el("g",ex.wr?{"clip-path":"url(#"+id+")"}:{opacity:0},g);
   if(ex.wr)FOLDS.forEach(function(f){var tf="translate("+f[0]+" "+f[1]+") rotate("+f[3]+") scale(1.9 .32)";
     el("path",{d:blobD(0,0,f[2]),transform:tf,fill:"#2C3A5C",opacity:.14},cg);
     el("path",{d:blobD(0,-18,f[2]*.8),transform:tf,fill:"#FFFFFF",opacity:.28},cg)});
-  var wg=el("g",{"clip-path":"url(#"+id+")",opacity:ex.wet?1:0},g);el("rect",{x:-160,y:-200,width:320,height:340,fill:"#20477C",opacity:.32},wg);
-  [[-40,-30,26],[36,40,30],[-10,80,22]].forEach(function(a){el("path",{d:blobD(a[0],a[1],a[2]),fill:"#20477C",opacity:.18},wg)});
-  var sg=el("g",{"clip-path":"url(#"+id+")",opacity:dirty?1:0},g);
-  s.st.forEach(function(a){drawStain(sg,a)});
+  var wg=el("g",ex.wet?{"clip-path":"url(#"+id+")"}:{opacity:0},g);if(ex.wet){el("rect",{x:-160,y:-200,width:320,height:340,fill:"#20477C",opacity:.32},wg);
+  [[-40,-30,26],[36,40,30],[-10,80,22]].forEach(function(a){el("path",{d:blobD(a[0],a[1],a[2]),fill:"#20477C",opacity:.18},wg)})}
+  var sg=el("g",dirty?{"clip-path":"url(#"+id+")"}:{opacity:0},g);
+  if(dirty)s.st.forEach(function(a){drawStain(sg,a)});
   return {g:g,stains:sg,wet:wg,cr:cg,clip:cp,remove:function(){g.remove();cp.remove()}};
 }
 function makeFolded(s,dirty,parent){
@@ -277,7 +277,7 @@ var objUrls={};function srcFor(u){return objUrls[u]||u}
 var soundOn=true;
 /* звуки игры (репо wardrobe) и общие звуки звезды и финала (репо Otvlekashki) */
 var SND={wash:REPO+"wash.m4a",place:REPO+"place.m4a",rack:REPO+"rack.m4a",iron:REPO+"iron.m4a",
-  step:REPO+"step.m4a",grab:REPO+"grab.m4a",dress:REPO+"dress.m4a",tug:REPO+"tug.m4a",thumb:REPO+"thumb.m4a",
+  step:REPO+"step.m4a",steps:REPO+"steps.m4a",grab:REPO+"grab.m4a",dress:REPO+"dress.m4a",tug:REPO+"tug.m4a",thumb:REPO+"thumb.m4a",
   star:DBASE+encodeURIComponent("stage complete.wav"),fanfare:DBASE+"fanfare.wav"};
 var AUD={},STEPS=[],stepI=0;
 function buildAudio(){Object.keys(SND).forEach(function(k){var a=new Audio();a.preload="auto";a.src=srcFor(SND[k]);AUD[k]=a});
@@ -600,7 +600,10 @@ function poseGirl(G,t){var p=G.p;G.root.setAttribute("transform","translate("+f1
     G.happy.forEach(function(h){h.setAttribute("opacity",p.happy?1:0)});G.mouth.setAttribute("opacity",p.happy?0:1);G.smile.setAttribute("opacity",p.happy?1:0)}
   G.sh.setAttribute("rx",f1(66-bob*.8))}
 /* камера: окно 3:2 плавно наезжает на девочку */
-function camTo(v){SVG.setAttribute("viewBox",v.map(f1).join(" "))}
+var GSVG=null;
+function girlLayer(){if(!GSVG){GSVG=document.createElementNS(NS,"svg");GSVG.setAttribute("class","sg-svg");GSVG.setAttribute("preserveAspectRatio","xMidYMid meet");
+  GSVG.setAttribute("viewBox",SVG.getAttribute("viewBox"));GSVG.style.pointerEvents="none";SVG.parentNode.appendChild(GSVG)}return GSVG}
+function camTo(v){var s=v.map(f1).join(" ");SVG.setAttribute("viewBox",s);if(GSVG)GSVG.setAttribute("viewBox",s)}
 function camLerp(a,b,e){return a.map(function(x,i){return lerp(x,b[i],e)})}
 var CAM0=[0,0,1536,1024],CAM1=[0,214,1000,667],CAM2=[40,212,760,507];
 function runSteps(steps,tk){var i=0;(function next(){if(tk!==intro.tok||i>=steps.length)return;var st=steps[i++];if(st.go)st.go();anim(st.d,st.u||function(){},next)})()}
@@ -615,7 +618,7 @@ function introFinale(){var tk=intro.tok;holdMusic(true);intro.items.forEach(func
     el("path",{d:"M0 0 L-48 34 H48 Z",fill:"none",stroke:"#A17269","stroke-width":5,"stroke-linejoin":"round"},g);if(a[1]===6)tee={g:g,holder:holder}});
   [[0,13],[0,15],[1,5],[1,7],[2,3],[2,4]].forEach(function(a,i){var sh=SHELF_Y[a[0]],n=i%2,f=makeFolded(CAT[a[1]],false,W);
     f.g.setAttribute("transform","translate("+(436+(n?5:-4))+" "+(sh-15-n*29)+") scale(.62)")});
-  var G=makeGirl(FLY);intro.girl=G;
+  var G=makeGirl(girlLayer());intro.girl=G;
   var X1=420,t0=clock,hx=0,hy=0,T=null,ti=null;
   function teeAt(x,y,sx,sy){T.setAttribute("transform","translate("+f1(x)+" "+f1(y)+") scale("+sx.toFixed(3)+" "+sy.toFixed(3)+")")}
   /* сценка начинается сразу, фраза про шкаф — через 0,5 с */
@@ -623,9 +626,9 @@ function introFinale(){var tk=intro.tok;holdMusic(true);intro.items.forEach(func
   later(.01,function(){if(tk===intro.tok)runSteps(STEPS_F,tk)});
   var STEPS_F=([
     /* 1. идёт к шкафу боком: шаг с коленом, руки в такт, хвостик качается */
-    {d:3.8,u:function(u){var t=clock-t0,e=u<.85?u/.85*.93:(.93+.07*eout((u-.85)/.15)),w=u<.9?1:Math.max(0,(1-u)/.1);
+    {go:function(){play("steps")},d:3.8,u:function(u){var t=u*3.8,e=u<.85?u/.85*.93:(.93+.07*eout((u-.85)/.15)),w=u<.9?1:Math.max(0,(1-u)/.1);
       G.x=lerp(1580,X1,e);G.p.ph=t*2*Math.PI/.62;G.p.walk=w;G.p.bob=Math.abs(Math.cos(G.p.ph))*5*w;
-      var sg=Math.cos(G.p.ph+.4)>=0;if(G.lastSg!=null&&sg!==G.lastSg&&w>.35&&t>.1)playStep();G.lastSg=sg}},
+      }},
     {d:.25},
     /* 2. тянется к футболке, голова чуть вверх */
     {go:function(){G.p.reach=true;G.p.walk=0;G.p.bob=0;hx=(279-G.x)/GS;hy=(380-GY)/GS},d:.75,u:function(u){var e=eio(u);
