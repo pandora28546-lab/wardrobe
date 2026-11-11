@@ -881,7 +881,7 @@ function anim(dur,upd,done,delay){tw.push({t0:clock+(delay||0),d:dur,u:upd,cb:do
 function later(sec,cb){anim(.0001,function(){},cb,sec)}
 function stepTw(){var list=tw;tw=[];list.forEach(function(a){if(a.tk!==tok)return;if(clock<a.t0){tw.push(a);return}var u=clamp((clock-a.t0)/a.d,0,1);a.u(u);if(u<1)tw.push(a);else if(a.cb)a.cb()})}
 
-/* ───────── озвучка: голос Софьи (w2/<имя>.m4a, если нет — <имя>.m4a в корне репо) ───────── */
+/* ───────── озвучка: голос Софьи — <имя>.m4a в корне репо wardrobe ───────── */
 function voiceLen(t){return .9+t.length*.065}
 var SCRIPT=[],LASTV=null;function setScript(list){SCRIPT=list}function hl(){}
 var VNAMES=["i1","i2","i3","i4","zhar","dozhd","sneg","osen","sport","prazd","bass","son","kuh","vel","og","fut","d","m"],VOICE={},VURL={};
@@ -1232,7 +1232,7 @@ function grab(u,ok,bad){fetch(u).then(function(r){if(!r.ok)throw 0;return r.blob
 (function(){var urls=[],seen={};Object.keys(A.snd).forEach(function(k){var u=A.snd[k];if(!seen[u]){seen[u]=1;urls.push(u)}});urls=urls.concat(PRAISE);
   total=urls.length+VNAMES.length+1;
   urls.forEach(function(u){grab(u,function(x){objUrls[u]=x;tickLoad()},tickLoad)});
-  VNAMES.forEach(function(k){grab(W2+k+".m4a",function(x){VURL[k]=x;tickLoad()},function(){grab(REPO+k+".m4a",function(x){VURL[k]=x;tickLoad()},tickLoad)})});
+  VNAMES.forEach(function(k){grab(REPO+k+".m4a",function(x){VURL[k]=x;tickLoad()},tickLoad)});
   var im=new Image();im.onload=im.onerror=tickLoad;im.src=A.star})();
 function onLoaded(){$id("sg-loading").style.display="none";loadedReady=true;if(isPhone())syncMobileUI();else $id("sg-start-overlay").style.display="flex"}
 $id("sg-start-btn").addEventListener("click",function(){$id("sg-start-overlay").style.display="none";unlock();started=true;syncMobileUI();prepare(false);later(.6,runIntro)});

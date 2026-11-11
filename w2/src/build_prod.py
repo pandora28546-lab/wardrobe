@@ -33,7 +33,7 @@ rep('.concat(PYMS).concat(Object.keys(VOICE)','.concat(PRA).concat(Object.keys(V
 js=js.replace('play("praise")','praise()')
 # 3. озвучка: голос Софьи, файлы скачаны при загрузке; длительность — из самого файла
 i=js.index('/* ───────── озвучка текстом ───────── */');j=js.index('/* ───────── камера ───────── */')
-js=js[:i]+'''/* ───────── озвучка: голос Софьи (w2/<имя>.m4a, если нет — <имя>.m4a в корне репо) ───────── */
+js=js[:i]+'''/* ───────── озвучка: голос Софьи — <имя>.m4a в корне репо wardrobe ───────── */
 function voiceLen(t){return .9+t.length*.065}
 var SCRIPT=[],LASTV=null;function setScript(list){SCRIPT=list}function hl(){}
 var VNAMES=["i1","i2","i3","i4","zhar","dozhd","sneg","osen","sport","prazd","bass","son","kuh","vel","og","fut","d","m"],VOICE={},VURL={};
