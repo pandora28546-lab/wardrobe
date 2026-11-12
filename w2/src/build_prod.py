@@ -17,7 +17,7 @@ var NEXT_GAME_URL=(window.SG_CFG&&window.SG_CFG.next)||"https://sofiatmn.ru/";
 var A={star:G2URL+"Starsystems.png",snd:{}};
 ["splash","splash1","rain","umbrella","click","bell","steps","dress","bubbles","snowball","leaves","chop","clank","blow","kick","pop"].forEach(function(k){A.snd[k]=W2+k+".m4a"});
 A.snd.dr2=W2+"kalimba.m4a";
-[["ambS","amb-summer"],["ambR","amb-rain"],["ambA","amb-autumn"],["ambW","amb-winter"],["ambG","amb-gym"],["ambPA","amb-party"],["ambP","amb-pool"],["ambN","amb-night"],["ambF","amb-field"],["ambK","amb-kitchen"]].forEach(function(q){A.snd[q[0]]=W2+q[1]+".m4a"});
+[["ambS","amb-summer"],["ambR","amb-rain"],["ambA","amb-autumn"],["ambW","amb-winter"],["ambG","amb-gym"],["ambPA","amb-party"],["ambP","amb-pool"],["ambN","amb-night"],["ambF","amb-whistle"],["ambK","amb-kitchen"]].forEach(function(q){A.snd[q[0]]=W2+q[1]+".m4a"});
 A.snd.star=DBASE+encodeURIComponent("stage complete.wav");A.snd.fanfare=DBASE+"fanfare.wav";A.snd.correct=DBASE+"correct.wav";A.snd.music=G2URL+"Music.m4a";
 var PRAISE=[3,4,5,6,7,8,9].map(function(n){return PBASE+"Rock"+n+".m4a"});
 var objUrls={};function srcFor(u){return objUrls[u]||u}'''+js[j:]
@@ -27,7 +27,7 @@ function buildAudio(){var u={};Object.keys(A.snd).forEach(function(k){u[k]=blobU
   Object.keys(u).forEach(function(k){if(k==="pym")return;var a=new Audio();a.preload="auto";a.src=u[k];AUD[k]=a});
   for(var i=0;i<3;i++){var a=new Audio();a.preload="auto";a.src=u.pym;PYMS.push(a)}}''',
 '''var PRA=[];
-function buildAudio(){Object.keys(A.snd).forEach(function(k){var a=new Audio();a.preload="auto";a.src=srcFor(A.snd[k]);AUD[k]=a});
+function buildAudio(){Object.keys(A.snd).forEach(function(k){var a=new Audio();a.preload="auto";a.src=srcFor(A.snd[k]);a.addEventListener("ended",function(){try{a.currentTime=0}catch(e){}});AUD[k]=a});
   PRAISE.forEach(function(u){var a=new Audio();a.preload="auto";a.src=srcFor(u);PRA.push(a)});buildVoice()}
 function praise(){if(!soundOn||!PRA.length)return;var a=PRA[Math.floor(Math.random()*PRA.length)];try{a.currentTime=0}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){})}''')
 rep('.concat(PYMS).concat(Object.keys(VOICE)','.concat(PRA).concat(Object.keys(VOICE)')
@@ -43,14 +43,13 @@ function buildVoice(){VNAMES.forEach(function(k){var u=VURL[k];if(!u)return;var 
 var BGV={sun:"zhar",rain:"dozhd",winter:"sneg",autumn:"osen",gym:"sport",party:"prazd",pool:"bass",bedroom:"son",kitchen:"kuh",bike:"vel",garden:"og",field:"fut"};
 function sayVoice(k){var a=VOICE[k];if(!soundOn||!a)return 0;try{a.pause();a.currentTime=0;a.volume=1}catch(e){}
   if(!a.rw){a.rw=1;a.addEventListener("ended",function(){try{a.currentTime=0}catch(e){}})}
-  a.muted=true;var un=function(){a.removeEventListener("playing",un);setTimeout(function(){a.muted=false},40)};a.addEventListener("playing",un);setTimeout(function(){a.muted=false},400);
-  var p=a.play();if(p&&p.catch)p.catch(function(){a.muted=false});return a.dur?a.dur+.15:0}
+  var p=a.play();if(p&&p.catch)p.catch(function(){});return a.dur?a.dur+.15:0}
 function say(i,cb){LASTV=SCRIPT[i].v;LASTI=i;var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);later(d,function(){if(cb)cb()});return d}
 
 '''+js[j:]
 # 4. конец звезды: похвала, звезда, дальше следующая звезда или финал
-rep('function endPreview(){hl(-1);musicHold(true);play("correct",.8);later(.45,function(){praise()});later(1.95,function(){starDone(CUR_STAR-1)})}',
-'function endPreview(){musicHold(true);play("correct",.8);later(.45,function(){praise()});later(1.95,function(){starDone(CUR_STAR-1,afterStar)})}')
+rep('function endPreview(){hl(-1);musicHold(true);later(.1,function(){praise()});later(1.6,function(){if(G2.prevAmb){fadeSnd(G2.prevAmb,1.2);G2.prevAmb=null}starDone(CUR_STAR-1)})}',
+'function endPreview(){musicHold(true);later(.1,function(){praise()});later(1.6,function(){if(G2.prevAmb){fadeSnd(G2.prevAmb,1.2);G2.prevAmb=null}starDone(CUR_STAR-1,afterStar)})}')
 rep('runS4(S4,function(){starDone(0)})','runS4(S4,function(){starDone(0,afterStar)})')
 # 5. оболочка: загрузка, старт, звёзды подряд, финал, полный экран, поворот
 shell=open(sys.argv[2] if len(sys.argv)>2 else '/home/claude/prod/shell.js').read()
