@@ -976,7 +976,7 @@ function sideBlink(H,t,happy){if(t>(H.blinkAt||0)){H.blinkT=t;H.blinkAt=t+rr(2,3
 /* ───────── звук ───────── */
 var AUD={},soundOn=true,PYMS=[],pymI=0;
 var PRA=[];
-function buildAudio(){Object.keys(A.snd).forEach(function(k){var a=new Audio();a.preload="auto";a.src=srcFor(A.snd[k]);a.addEventListener("ended",function(){try{a.currentTime=0}catch(e){}});AUD[k]=a});
+function buildAudio(){Object.keys(A.snd).forEach(function(k){var a=new Audio();a.preload="auto";a.src=srcFor(A.snd[k]);AUD[k]=a});
   PRAISE.forEach(function(u){var a=new Audio();a.preload="auto";a.src=srcFor(u);PRA.push(a)});buildVoice()}
 function praise(){if(!soundOn||!PRA.length)return;var a=PRA[Math.floor(Math.random()*PRA.length)];try{a.currentTime=0}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){})}
 function unlock(){Object.keys(AUD).map(function(k){return AUD[k]}).concat(PRA).concat(Object.keys(VOICE).map(function(k){return VOICE[k]})).forEach(function(a){a.muted=true;var p=a.play();if(p&&p.then)p.then(function(){a.pause();a.currentTime=0;a.muted=false}).catch(function(){a.muted=false});else a.muted=false})}

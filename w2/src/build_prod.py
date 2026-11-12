@@ -27,7 +27,7 @@ function buildAudio(){var u={};Object.keys(A.snd).forEach(function(k){u[k]=blobU
   Object.keys(u).forEach(function(k){if(k==="pym")return;var a=new Audio();a.preload="auto";a.src=u[k];AUD[k]=a});
   for(var i=0;i<3;i++){var a=new Audio();a.preload="auto";a.src=u.pym;PYMS.push(a)}}''',
 '''var PRA=[];
-function buildAudio(){Object.keys(A.snd).forEach(function(k){var a=new Audio();a.preload="auto";a.src=srcFor(A.snd[k]);a.addEventListener("ended",function(){try{a.currentTime=0}catch(e){}});AUD[k]=a});
+function buildAudio(){Object.keys(A.snd).forEach(function(k){var a=new Audio();a.preload="auto";a.src=srcFor(A.snd[k]);AUD[k]=a});
   PRAISE.forEach(function(u){var a=new Audio();a.preload="auto";a.src=srcFor(u);PRA.push(a)});buildVoice()}
 function praise(){if(!soundOn||!PRA.length)return;var a=PRA[Math.floor(Math.random()*PRA.length)];try{a.currentTime=0}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){})}''')
 rep('.concat(PYMS).concat(Object.keys(VOICE)','.concat(PRA).concat(Object.keys(VOICE)')
