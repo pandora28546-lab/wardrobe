@@ -1189,9 +1189,9 @@ var INTRO_SCRIPT=[
  {who:"Сцена 4 · велосипед",txt:"На велосипеде катаемся в шлеме и наколенниках.",v:"i4"}];
 var S1,S2,S3,S4;
 function buildIntro(){SC=[];S1=scene(buildS1,1536);S2=scene(buildS2,S2W);S3=scene(buildS3,1536);S4=scene(buildS4,S4W)}
-function runIntro(){show(S1);
+function runIntro(){show(S1);show(S2);S2.x=420;poseS2(S2,clock);
   runS1(S1,function(){show(S2);S2.x=420;poseS2(S2,clock);var c=[S2.x0,0,1536,1024];
-    panTo(c,1.2,function(){hide(S1);runS2(S2,function(){fadeSnd("rain",1.2);show(S3);poseKid(S3.K,clock);
+    panTo(c,1.2,function(){hide(S1);runS2(S2,function(){fadeSnd("rain",1.2);show(S3);poseKid(S3.K,clock);show(S4);S4.x=300;S4.wa=0;S4.ca=0;poseS4(S4,clock);
       panTo([S3.x0,0,1536,1024],1.2,function(){hide(S2);runS3(S3,function(){show(S4);S4.x=300;poseS4(S4,clock);
         panTo([S4.x0,0,1536,1024],1.2,function(){hide(S3);runS4(S4,function(){starDone(0,afterStar)})})})})})})})}
 
@@ -1264,7 +1264,7 @@ function round1(R,idx,cb,fadeIn,qd){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),
         T.g.remove();drawItem(T.it,K,null);if(T.it.onWear)T.it.onWear(K);play(DRESS_SND);anim(.3,function(u){K.sq=Math.sin(Math.PI*u)*.025});worn++;
         if(worn>=need)later(.6,finish);else canDrag=true})}
     else{var x0=T.cx,y0=T.cy;anim(.2,function(u){var e=eio(u);T.cx=lerp(x0,T.home.x,e);T.cy=lerp(y0,T.home.y,e);T.s=lerp(T.s0*1.08,T.s0,e);placeTile(T)})}};
-  function finish(){var aa=AUD[amb];if(aa&&aa.paused){play(amb,ambV*.35);try{aa.loop=true}catch(e){}}sndVol(amb,ambV,1.0);var cb0=cb;cb=function(){G2.prevAmb=amb;cb0()};anim(1.8,function(u){var e=eio(u);CAM=[lerp(0,77,e),lerp(0,51,e),lerp(1536,1382,e),lerp(1024,921,e)]},null,.3);bgBlur(false);ticks.push(o.tick);anim(.6,function(u){VE.setAttribute("opacity",(.4*(1-eio(u))).toFixed(3));TL.setAttribute("opacity",(1-eio(u)).toFixed(2))});
+  function finish(){var aa=AUD[amb];if(aa&&aa.paused){play(amb,ambV*.35);try{aa.loop=true}catch(e){}}sndVol(amb,ambV,1.0);var cb0=cb;cb=function(){fadeSnd(amb,1.5);G2.prevAmb=null;cb0()};anim(1.8,function(u){var e=eio(u);CAM=[lerp(0,77,e),lerp(0,51,e),lerp(1536,1382,e),lerp(1024,921,e)]},null,.3);bgBlur(false);ticks.push(o.tick);anim(.6,function(u){VE.setAttribute("opacity",(.4*(1-eio(u))).toFixed(3));TL.setAttribute("opacity",(1-eio(u)).toFixed(2))});
     later(.5,function(){CARTOONS[R.cartoon]?CARTOONS[R.cartoon](K,o,{g:g},cb):R.cartoon==="bubbles"?cartoonBubbles():R.cartoon==="puddle"?cartoonPuddle():R.cartoon==="snowball"?snowballCartoon(K,o,FX,cb):leavesCartoon(K,o,FX,cb)})}
   function cartoonBubbles(){var A1=K.arms[1],P1=K.pose[1],tmp={x:50,a:0,b:0};g.appendChild(o.bubL);
     /* палочка для пузырей в правой руке, колечко у рта */
@@ -1321,7 +1321,8 @@ function prepare(keepStars){reset(keepStars);
     /* до старта звезды стоит тот же фон, что будет в раунде, и с той же камерой — без скачка */
     var o=bgFor(STARS[CUR_STAR][START_R],START_R),bgG=el("g",{},BGROOT);bgG.appendChild(o.g);ticks.push(o.tick);CAM=[77,51,1382,921];G2.prev={g:el("g",{},ROOT),bg:bgG};G2.instant=true;earnedBefore()}}
 /* смена звезды без пустого экрана и без копий сцены: пока строится следующая звезда, на экране стоит последний кадр, затем сразу новая сцена */
-function goStar(n){setTimeout(function(){
+function goStar(n){var t0=Date.now();(function w(){/* сначала даём догореть салюту: сборка новой звезды занимает поток, и салют бы замер */
+  if(fwRaf&&Date.now()-t0<900){setTimeout(w,60);return}fwRun=false;fwP=[];c2d.clearRect(0,0,fwC.width,fwC.height);
   /* смена звезды так же, как смена раунда: последний кадр уходит в отдельную группу (пересчитанную под камеру нового раунда),
      новая звезда строится под ней, старая плавно гаснет сверху. Сцену не копируем — те же элементы просто переносим. */
   var c=CAM.slice(),N=[77,51,1382,921],k=N[2]/c[2],tr="translate("+f1(N[0]-c[0]*k)+" "+f1(N[1]-c[1]*k)+") scale("+k.toFixed(4)+")";
@@ -1329,7 +1330,7 @@ function goStar(n){setTimeout(function(){
   tok++;tw=[];ticks=[];kids=[];splashes=[];camFn=null;drag=null;musicHold(true);
   Object.keys(AUD).forEach(function(q){if(q!=="star"&&q!=="fanfare")try{AUD[q].pause()}catch(e){}});Object.keys(VOICE).forEach(function(q){try{VOICE[q].pause()}catch(e){}});
   ROOT.appendChild(oG);BGROOT.appendChild(oB);G2={prev:{g:oG,bg:oB}};CAM=N.slice();
-  mode="star";CUR_STAR=n;START_R=0;setScript(starScript());earnedBefore();runStar2()},0)}
+  mode="star";CUR_STAR=n;START_R=0;setScript(starScript());earnedBefore();runStar2()})()}
 function afterStar(){if(mode==="intro"){goStar(2);return}if(CUR_STAR<4){goStar(CUR_STAR+1);return}
   play("fanfare");launchFireworks();showEnd()}
 function showEnd(){setTimeout(function(){$id("sg-end-overlay").classList.add("sg-show")},1500)}
