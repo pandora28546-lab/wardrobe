@@ -12,12 +12,8 @@ function prepare(keepStars){reset(keepStars);
   else{setScript(starScript());
     /* до старта звезды стоит тот же фон, что будет в раунде, и с той же камерой — без скачка */
     var o=bgFor(STARS[CUR_STAR][START_R],START_R),bgG=el("g",{},BGROOT);bgG.appendChild(o.g);ticks.push(o.tick);CAM=[77,51,1382,921];G2.prev={g:el("g",{},ROOT),bg:bgG};G2.instant=true;earnedBefore()}}
-/* смена звезды без пустого экрана: поверх остаётся снимок последнего кадра, под ним строится следующая звезда, снимок плавно уходит */
-function goStar(n){var snap=document.createElement("div");snap.style.cssText="position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden;border-radius:24px";
-  [BGSVG,SVG].forEach(function(sv){var c=sv.cloneNode(true);c.removeAttribute("id");snap.appendChild(c)});STAGE.appendChild(snap);
-  setTimeout(function(){mode="star";CUR_STAR=n;START_R=0;prepare(true);
-    requestAnimationFrame(function(){snap.style.transition="opacity .5s ease";requestAnimationFrame(function(){snap.style.opacity="0"})});
-    setTimeout(function(){snap.remove()},700);later(.6,runStar2)},30)}
+/* смена звезды без пустого экрана и без копий сцены: пока строится следующая звезда, на экране стоит последний кадр, затем сразу новая сцена */
+function goStar(n){setTimeout(function(){mode="star";CUR_STAR=n;START_R=0;prepare(true);later(.6,runStar2)},0)}
 function afterStar(){if(mode==="intro"){goStar(2);return}if(CUR_STAR<4){goStar(CUR_STAR+1);return}
   play("fanfare");launchFireworks();showEnd()}
 function showEnd(){setTimeout(function(){$id("sg-end-overlay").classList.add("sg-show")},1500)}
