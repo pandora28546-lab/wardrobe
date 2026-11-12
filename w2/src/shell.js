@@ -12,9 +12,12 @@ function prepare(keepStars){reset(keepStars);
   else{setScript(starScript());
     /* до старта звезды стоит тот же фон, что будет в раунде, и с той же камерой — без скачка */
     var o=bgFor(STARS[CUR_STAR][START_R],START_R),bgG=el("g",{},BGROOT);bgG.appendChild(o.g);ticks.push(o.tick);CAM=[77,51,1382,921];G2.prev={g:el("g",{},ROOT),bg:bgG};G2.instant=true;earnedBefore()}}
-/* смена звезды: сцена гаснет, под ней строится следующая, сцена появляется */
-function goStar(n){STAGE.style.transition="opacity .5s ease";STAGE.style.opacity="0";
-  setTimeout(function(){mode="star";CUR_STAR=n;START_R=0;prepare(true);STAGE.style.opacity="1";later(.6,runStar2)},550)}
+/* смена звезды без пустого экрана: поверх остаётся снимок последнего кадра, под ним строится следующая звезда, снимок плавно уходит */
+function goStar(n){var snap=document.createElement("div");snap.style.cssText="position:absolute;inset:0;z-index:5;pointer-events:none;overflow:hidden;border-radius:24px";
+  [BGSVG,SVG].forEach(function(sv){var c=sv.cloneNode(true);c.removeAttribute("id");snap.appendChild(c)});STAGE.appendChild(snap);
+  setTimeout(function(){mode="star";CUR_STAR=n;START_R=0;prepare(true);
+    requestAnimationFrame(function(){snap.style.transition="opacity .5s ease";requestAnimationFrame(function(){snap.style.opacity="0"})});
+    setTimeout(function(){snap.remove()},700);later(.6,runStar2)},30)}
 function afterStar(){if(mode==="intro"){goStar(2);return}if(CUR_STAR<4){goStar(CUR_STAR+1);return}
   play("fanfare");launchFireworks();showEnd()}
 function showEnd(){setTimeout(function(){$id("sg-end-overlay").classList.add("sg-show")},1500)}
@@ -23,7 +26,11 @@ $id("sg-endbtn").addEventListener("click",restartGame);
 $id("sg-nextbtn").addEventListener("click",function(){try{window.top.location.href=NEXT_GAME_URL}catch(e){window.location.href=NEXT_GAME_URL}});
 
 /* 🔊 — повторить последнюю фразу; 🎶 — фоновая музыка (по умолчанию выключена) */
-$id("sg-repeat").addEventListener("click",function(){if(!started||!LASTV)return;var a=VOICE[LASTV];if(a&&!a.paused)return;sayVoice(LASTV)});
+/* 🔊 в звёздах 2–4 повторяет условие раунда («Мы идём в спортзал»), затем задание */
+$id("sg-repeat").addEventListener("click",function(){if(!started||LASTI==null||!SCRIPT[LASTI])return;
+  if(Object.keys(VOICE).some(function(k){return !VOICE[k].paused}))return;var i=LASTI;
+  if(mode!=="intro"&&i%2===1)i--;var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);
+  if(mode!=="intro"&&SCRIPT[i+1])later(d,function(){sayVoice(SCRIPT[i+1].v)})});
 $id("sg-music").addEventListener("click",function(){musicOn=!musicOn;this.classList.toggle("sg-off",!musicOn);musicHold(musicHeld)});
 /* вкладка скрыта — звук на паузу, вернулись — продолжаем то, что играло */
 var hiddenPlaying=[];
@@ -42,7 +49,8 @@ function grab(u,ok,bad){fetch(u).then(function(r){if(!r.ok)throw 0;return r.blob
   VNAMES.forEach(function(k){grab(REPO+k+".m4a",function(x){VURL[k]=x;tickLoad()},tickLoad)});
   var im=new Image();im.onload=im.onerror=tickLoad;im.src=A.star})();
 function onLoaded(){$id("sg-loading").style.display="none";loadedReady=true;if(isPhone())syncMobileUI();else $id("sg-start-overlay").style.display="flex"}
-$id("sg-start-btn").addEventListener("click",function(){$id("sg-start-overlay").style.display="none";unlock();started=true;syncMobileUI();prepare(false);later(.6,runIntro)});
+/* вступление уже построено при загрузке — по «Начать» не перестраиваем, только пауза 0,6 с */
+$id("sg-start-btn").addEventListener("click",function(){$id("sg-start-overlay").style.display="none";unlock();started=true;syncMobileUI();later(.6,runIntro)});
 
 /* ─── полноэкранный режим и поворот телефона (как в первой игре «Гардероб») ─── */
 var game=GAME,fsWrap=$id("sg-fs-wrap"),rotEl=$id("sg-rotate"),canRealFS=!!(fsWrap.requestFullscreen||fsWrap.webkitRequestFullscreen),pseudoFS=false;

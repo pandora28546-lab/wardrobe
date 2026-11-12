@@ -1,6 +1,7 @@
 # Сборка боевого движка «Гардероб 2» из исходника превью src2.html
 import re
-s=open('/home/claude/prev/src2.html').read()
+import sys
+s=open(sys.argv[1] if len(sys.argv)>1 else '/home/claude/prev/src2.html').read()
 js=s[s.index('<script>')+8:s.rindex('</script>')]
 def rep(a,b,n=1):
     global js;c=js.count(a);assert c==n,(c,a[:90]);js=js.replace(a,b)
@@ -35,25 +36,25 @@ js=js.replace('play("praise")','praise()')
 i=js.index('/* ───────── озвучка текстом ───────── */');j=js.index('/* ───────── камера ───────── */')
 js=js[:i]+'''/* ───────── озвучка: голос Софьи — <имя>.m4a в корне репо wardrobe ───────── */
 function voiceLen(t){return .9+t.length*.065}
-var SCRIPT=[],LASTV=null;function setScript(list){SCRIPT=list}function hl(){}
+var SCRIPT=[],LASTV=null,LASTI=null;function setScript(list){SCRIPT=list}function hl(){}
 var VNAMES=["i1","i2","i3","i4","zhar","dozhd","sneg","osen","sport","prazd","bass","son","kuh","vel","og","fut","d","m"],VOICE={},VURL={};
 function buildVoice(){VNAMES.forEach(function(k){var u=VURL[k];if(!u)return;var a=new Audio();a.preload="auto";
-  a.addEventListener("loadedmetadata",function(){if(isFinite(a.duration)&&a.duration>0)a.dur=a.duration});a.src=u;VOICE[k]=a})}
+  a.addEventListener("loadedmetadata",function(){if(isFinite(a.duration)&&a.duration>0)a.dur=a.duration});a.src=u;try{a.load()}catch(e){}VOICE[k]=a})}
 var BGV={sun:"zhar",rain:"dozhd",winter:"sneg",autumn:"osen",gym:"sport",party:"prazd",pool:"bass",bedroom:"son",kitchen:"kuh",bike:"vel",garden:"og",field:"fut"};
-function sayVoice(k){var a=VOICE[k];if(!soundOn||!a||!a.dur)return 0;try{a.pause();a.currentTime=0;a.volume=1}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){});return a.dur+.15}
-function say(i,cb){LASTV=SCRIPT[i].v;var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);later(d,function(){if(cb)cb()});return d}
+function sayVoice(k){var a=VOICE[k];if(!soundOn||!a)return 0;try{a.pause();a.currentTime=0;a.volume=1}catch(e){}
+  if(!a.rw){a.rw=1;a.addEventListener("ended",function(){try{a.currentTime=0}catch(e){}})}
+  a.muted=true;var un=function(){a.removeEventListener("playing",un);setTimeout(function(){a.muted=false},40)};a.addEventListener("playing",un);setTimeout(function(){a.muted=false},400);
+  var p=a.play();if(p&&p.catch)p.catch(function(){a.muted=false});return a.dur?a.dur+.15:0}
+function say(i,cb){LASTV=SCRIPT[i].v;LASTI=i;var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);later(d,function(){if(cb)cb()});return d}
 
 '''+js[j:]
 # 4. конец звезды: похвала, звезда, дальше следующая звезда или финал
 rep('function endPreview(){hl(-1);musicHold(true);play("correct",.8);later(.45,function(){praise()});later(1.95,function(){starDone(CUR_STAR-1)})}',
 'function endPreview(){musicHold(true);play("correct",.8);later(.45,function(){praise()});later(1.95,function(){starDone(CUR_STAR-1,afterStar)})}')
-rep('function starDone(slot){','function starDone(slot,cb){')
-rep('starBacks[slot].classList.add("sg-earned");starBacks[slot].classList.remove("sg-pulse");void starBacks[slot].offsetWidth;starBacks[slot].classList.add("sg-pulse")},.3)})}',
-'starBacks[slot].classList.add("sg-earned");starBacks[slot].classList.remove("sg-pulse");void starBacks[slot].offsetWidth;starBacks[slot].classList.add("sg-pulse");if(cb)later(1.6,cb)},.3)})}')
 rep('runS4(S4,function(){starDone(0)})','runS4(S4,function(){starDone(0,afterStar)})')
 # 5. оболочка: загрузка, старт, звёзды подряд, финал, полный экран, поворот
-shell=open('/home/claude/prod/shell.js').read()
+shell=open(sys.argv[2] if len(sys.argv)>2 else '/home/claude/prod/shell.js').read()
 js=js+shell
 assert '%%' not in js
-open('/home/claude/prod/wardrobe2.js','w').write('/* Игра «Гардероб 2»: по погоде и по случаю — движок. Собран из исходника превью (build_prod.py). */\n'+js.strip()+'\n')
+open(sys.argv[3] if len(sys.argv)>3 else '/home/claude/prod/wardrobe2.js','w').write('/* Игра «Гардероб 2»: по погоде и по случаю — движок. Собран из исходника превью (build_prod.py). */\n'+js.strip()+'\n')
 print(len(js))

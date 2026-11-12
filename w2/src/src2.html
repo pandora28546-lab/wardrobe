@@ -337,7 +337,7 @@ function wardrobeRoom(){var g=el("g",{},null),o={g:g};
 /* ───────── мягкая тень, как в «Половинках» ─────────
    В «Половинках» у деталей drop-shadow(0 6px 8px rgba(0,0,0,.35)): ровное размытие со всех сторон, чуть вниз.
    Здесь то же самое фильтром SVG: для людей (окно 1536 по ширине, на экране ≈ 820 px) — сдвиг 11 и размытие 15, для вещей — 6 и 8. */
-(function(){[["dsP",11,15,.28],["dsI",6,8,.4]].forEach(function(f){var fl=el("filter",f[0]==="dsP"?{id:f[0],filterUnits:"userSpaceOnUse",x:-1600,y:-1400,width:3200,height:1800,"color-interpolation-filters":"sRGB"}:{id:f[0],x:"-40%",y:"-30%",width:"180%",height:"170%","color-interpolation-filters":"sRGB"},DEFS);
+(function(){[["dsP",11,15,.28],["dsI",6,8,.4]].forEach(function(f){var fl=el("filter",f[0]==="dsP"?{id:f[0],filterUnits:"userSpaceOnUse",x:-420,y:-720,width:840,height:820,"color-interpolation-filters":"sRGB"}:{id:f[0],x:"-40%",y:"-30%",width:"180%",height:"170%","color-interpolation-filters":"sRGB"},DEFS);
   el("feDropShadow",{dx:0,dy:f[1],stdDeviation:f[2],"flood-color":"#2C3A5C","flood-opacity":f[3]},fl)})})();
 function castShadow(src,parent,dx,dy,op,r){var id=(r!=null&&r<8)?"dsI":"dsP",C={on:true,last:true};src.setAttribute("filter","url(#"+id+")");
   C.sync=function(){if(C.on!==C.last){C.last=C.on;if(C.on)src.setAttribute("filter","url(#"+id+")");else src.removeAttribute("filter")}};
@@ -381,7 +381,7 @@ function spikyCap2(G,C,cx,cy,rx,ry,fk,fcx,LE,flat){var P=[];for(var a=165,i=0;a<
 var BANGS_F=[[112,262],[114,216],[138,186],[170,172],[200,169],[230,172],[262,186],[286,216],[288,262],[276,236],[260,222],[240,230],[222,216],[202,228],[182,216],[162,230],[142,222],[126,236]];
 /* рот в покое — плавная дуга; улыбка — приоткрытая, с язычком */
 function mouth2(g,sm){if(!sm){var a=[];for(var i=0;i<=10;i++){var u=i/10;a.push([190+20*u,317+3.2*(1-Math.pow(2*u-1,2))])}lineP(g,a,"#A17269",3.4);return}
-  el("path",{d:smoothD([[182,312],[200,314],[218,312],[212,327],[200,333],[188,327]],1),fill:"#985037"},g);el("path",{d:smoothD(ellP(200,328,9,4.2,0,12),1),fill:"#F9AB90"},g)}
+  el("path",{d:smoothD([[185,313],[200,315],[215,313],[210.5,322.5],[200,326],[189.5,322.5]],1),fill:"#985037"},g);el("path",{d:smoothD([[187.5,314.2],[200,316],[212.5,314.2],[211.3,318],[200,319.5],[188.7,318]],1),fill:"#FFFFFF"},g)}
 
 /* голова спереди: K получает глаза, рот, хвостики, резинки */
 function frontHead2(H,kind,K){var C=KC[kind],G=el("g",{transform:HT},H),girl=kind==="girl";K.hg=G;
@@ -502,7 +502,7 @@ function poseKid(K,t){var br=Math.sin(t*2.2)*.006;
 function P(g,d,c,w){return el("path",w?{d:d,fill:c,stroke:c,"stroke-width":w,"stroke-linejoin":"round","stroke-linecap":"round"}:{d:d,fill:c},g)}
 function Ln(g,d,c,w,op){var a={d:d,stroke:c,"stroke-width":w,fill:"none","stroke-linecap":"round","stroke-linejoin":"round"};if(op!=null)a.opacity=op;return el("path",a,g)}
 function flower(g,x,y,r){for(var i=0;i<5;i++){var a=i/5*Math.PI*2-Math.PI/2;el("circle",{cx:f1(x+Math.cos(a)*r*.62),cy:f1(y+Math.sin(a)*r*.62),r:f1(r*.5),fill:"#FFFFFF"},g)}el("circle",{cx:x,cy:y,r:f1(r*.36),fill:"#FF8725"},g)}
-function sleeveShort(c,d){return function(g){el("rect",{x:-19,y:-10,width:38,height:46,rx:15,fill:c},g);Ln(g,"M-16 30 H16",d,7)}}
+function sleeveShort(c,d){return function(g){el("rect",{x:-19,y:-17,width:38,height:53,rx:12,fill:c},g);Ln(g,"M-16 30 H16",d,7)}}
 function sleeveLongUp(c,w,d,quilt){return function(g){Ln(g,"M0 -4 V72",c,w||33);if(quilt)[16,44].forEach(function(y){Ln(g,"M"+(-(w/2-5))+" "+y+" Q0 "+(y+5)+" "+(w/2-5)+" "+y,d,4,.45)})}}
 function sleeveLongFo(c,cuff,w,quilt){return function(g){Ln(g,"M0 0 V50",c,(w||33)-3);if(quilt)Ln(g,"M"+(-(w/2-6))+" 22 Q0 27 "+(w/2-6)+" 22",cuff,4,.45);Ln(g,"M0 46 V54",cuff,(w||33)-1)}}
 function trousers(c,d,light,bottom){return function(g){var b=bottom;
@@ -590,6 +590,7 @@ var ITEMS={
 function drawItem(it,K,g){
   var to=g?{body:g,head:el("g",{transform:"translate(0 -386)"},g)}:{body:it.layer?K.L[it.layer]:K.L.top,head:K.hatL};
   var nb=it.body?el("g",{},to.body):null,nh=it.head?el("g",{},to.head):null,sub=[];if(nb){it.body(nb);sub.push(nb)}if(nh){it.head(nh);sub.push(nh)}
+  if(!g&&K&&nh){if(/очки/.test(it.name))K.gogG=nh;else if(K.gogG)K.hatL.appendChild(K.gogG)}
   if(!g&&K&&it.head&&K.hairHat&&!/банты|очки/.test(it.name)){K.hair.setAttribute("display","none");K.hairHat.removeAttribute("display")}
   [-1,1].forEach(function(s){if(!it.up&&!it.fo&&!it.hand)return;if(it.side&&it.side!==s)return;
     var P=it.pose&&(!it.side||it.side===s)?it.pose:{a:-s*10,b:0};
@@ -692,7 +693,7 @@ function snowballCartoon(K,o,FXg,cb){var P1=K.pose[1],tmp={x:50,a:0,b:0};K.p.hap
       for(var i=0;i<12;i++){var a=rr(0,Math.PI*2),v=rr(120,300);splashes.push({e:el("circle",{r:f1(rr(5,10)),fill:"#FFFFFF"},FXg),x:x1,y:y1,gy:900,vx:Math.cos(a)*v,vy:Math.sin(a)*v-200})}
       anim(.9,function(u){o.head.setAttribute("transform","translate(0 -210) rotate("+f1(Math.sin(u*Math.PI*4)*10*(1-u))+")")});
       anim(.4,function(u){P1.a=lerp(-40,-10,eio(u));P1.b=lerp(10,0,eio(u));K.p.tilt=lerp(3,0,u)});
-      later(.2,function(){anim(.5,function(u){K.hop=Math.sin(Math.PI*u)*40})});later(1.8,cb)})})}
+      later(.2,function(){anim(.5,function(u){K.hop=Math.sin(Math.PI*u)*40})});later(.7,cb)})})}
 function leavesCartoon(K,o,FXg,cb){var L=K.pose[-1],R=K.pose[1];K.p.happy=true;
   /* присел, руки вниз в кучу — и подбросил листья вверх */
   anim(.4,function(u){var e=eio(u);K.sq=.05*e;L.a=lerp(10,30,e);R.a=lerp(-10,-30,e)},function(){play("leaves",.6);
@@ -702,7 +703,7 @@ function leavesCartoon(K,o,FXg,cb){var L=K.pose[-1],R=K.pose[1];K.p.happy=true;
         if(l.y>975&&l.vy>0){l.e.remove();return false}l.e.setAttribute("transform","translate("+f1(l.x)+" "+f1(l.y)+") rotate("+f1(l.r)+") scale(1 "+(.4+.6*Math.abs(Math.sin(t*3+l.p))).toFixed(2)+")");return true})};
     ticks.push(live);
     later(.5,function(){anim(.6,function(u){var e=eio(u);L.a=lerp(150,10,e);R.a=lerp(-150,-10,e)})});
-    later(3.6,function(){ticks=ticks.filter(function(f){return f!==live});lv.forEach(function(l){l.e.remove()});cb()})})}
+    later(2.4,function(){ticks=ticks.filter(function(f){return f!==live});lv.forEach(function(l){l.e.remove()});cb()})})}
 
 /* ═════════ ЗВЁЗДЫ 3–4: по случаю и для занятия ═════════ */
 /* ── вещи ── */
@@ -751,7 +752,7 @@ ITEMS.armbands={name:"нарукавники",at:[0,-250],up:function(g){var b=e
 /* занятия */
 ITEMS.kerchief={name:"косынка",head:function(g){P(g,"M-80 -6 Q-82 -94 0 -96 Q82 -94 80 -6 Q40 -26 0 -28 Q-40 -26 -80 -6 Z","#FC3529");[[-40,-60],[0,-74],[40,-60],[-20,-40],[24,-40]].forEach(function(q){el("circle",{cx:q[0],cy:q[1],r:6,fill:"#FFFFFF"},g)});
     P(g,"M66 -20 L96 -4 L80 14 Z","#FC3529")}};
-ITEMS.helmet={name:"шлем",head:function(g){Ln(g,"M-62 0 Q-50 40 -20 56 M62 0 Q50 40 20 56","#2C3A5C",5);P(g,"M-84 -6 Q-90 -108 0 -112 Q90 -108 84 -6 Q40 -22 0 -24 Q-40 -22 -84 -6 Z","#FF8725");
+ITEMS.helmet={name:"шлем",head:function(g){Ln(g,"M-73 2 Q-72 54 -14 80 H14 Q72 54 73 2","#2C3A5C",5);el("rect",{x:-9,y:75,width:18,height:10,rx:3,fill:"#575757"},g);P(g,"M-84 -6 Q-90 -108 0 -112 Q90 -108 84 -6 Q40 -22 0 -24 Q-40 -22 -84 -6 Z","#FF8725");
     Ln(g,"M-46 -90 Q-40 -60 -44 -30 M0 -108 V-40 M46 -90 Q40 -60 44 -30","#2C3A5C",9,.8);P(g,"M-70 -16 Q0 -36 70 -16 Q60 -4 0 -14 Q-60 -4 -70 -16 Z","#DF8615")}};
 ITEMS.pads={name:"наколенники и налокотники",at:[0,-120],layer:"shoes",body:function(g){[-1,1].forEach(function(s){el("ellipse",{cx:s*24,cy:-96,rx:21,ry:18,fill:"#FF8725"},g);Ln(g,"M"+(s*24-14)+" -96 H"+(s*24+14),"#DF8615",4)})},
   fo:function(g){el("ellipse",{cx:0,cy:2,rx:17,ry:14,fill:"#FF8725"},g)},
@@ -811,12 +812,12 @@ function bgBedroom(){return bedroom()}
 /* ── мультики ── */
 function cartGym(K,o,C,cb){/* поднимает гантели три раза */K.p.happy=false;var L=K.pose[-1],R=K.pose[1];
   var dbs=[-1,1].map(function(s){var d=el("g",{},K.arms[s].hdL);Ln(d,"M-24 4 H24","#908B90",8);el("rect",{x:-34,y:-12,width:14,height:32,rx:4,fill:"#2C3A5C"},d);el("rect",{x:20,y:-12,width:14,height:32,rx:4,fill:"#2C3A5C"},d);return d});
-  play("clank",.6);var n=0;(function up(){if(n>=3){K.p.happy=true;later(.9,cb);return}n++;
+  play("clank",.6);var n=0;(function up(){if(n>=3){K.p.happy=true;later(.5,cb);return}n++;
     anim(.6,function(u){var e=eio(u);L.a=10;L.b=lerp(0,150,e);R.a=-10;R.b=lerp(0,-150,e)},function(){anim(.6,function(u){var e=eio(u);L.b=lerp(150,0,e);R.b=lerp(-150,0,e)},up)},n===1?0:0)})()}
 function cartParty(K,o,C,cb){var t0=K.x;anim(.7,function(u){K.x=lerp(t0,850,eio(u));K.hop=Math.abs(Math.sin(u*Math.PI*2))*6},function(){K.hop=0;
   later(.3,function(){K.p.tilt=8;K.p.blow=true;play("blow",.5);anim(1.0,function(u){o.flames.forEach(function(f,i){var k=clamp((u-i*.15)/.5,0,1);f.setAttribute("ry",f1(13*(1-k)));f.setAttribute("opacity",(1-k).toFixed(2))})},function(){
     K.p.blow=false;K.p.tilt=0;K.p.happy=true;o.flames.forEach(function(f){var s=Ln(o.cake,"M"+f.getAttribute("cx")+" -156 q8 -16 0 -32 q-8 -16 0 -32","#BEBFBF",5,.7);anim(1.4,function(u){s.setAttribute("opacity",(.7*(1-u)).toFixed(2));s.setAttribute("transform","translate(0 "+f1(-u*30)+")")})});
-    later(2.2,cb)})})})}
+    later(.9,cb)})})})}
 function cartPool(K,o,C,cb){/* прыгает в бассейн и плывёт вбок: над водой голова, руки под водой, вокруг шеи круги */
   var front=el("g",{opacity:0},C.g);el("rect",{x:-10,y:752,width:1556,height:88,fill:"#6B91D6",opacity:.94},front);Ln(front,"M-10 754 H1546","#EAF1FF",5,.8);
   el("rect",{x:-10,y:836,width:1556,height:24,fill:"#FFFFFF"},front);el("rect",{x:-10,y:860,width:1556,height:190,fill:"#EAF1FF"},front);var fl="";for(var x=-10;x<1546;x+=96)fl+="M"+x+" 860 V1044 ";Ln(front,fl+"M-10 950 H1546","#D2E2FE",4);
@@ -830,7 +831,7 @@ function cartPool(K,o,C,cb){/* прыгает в бассейн и плывёт 
 function cartSleep(K,o,C,cb){/* идёт к кровати, забирается под одеяло, засыпает, ночник гаснет */K.castOff=false;C.g.appendChild(o.blanket);C.g.appendChild(o.foot);var bx=1120,by=1060;
   later(.4,function(){
     var x0=K.x,y0=K.gy;anim(.75,function(u){var e=eio(u);K.x=lerp(x0,bx,e);K.gy=lerp(y0,by,e)-Math.sin(Math.PI*u)*70;K.gs=lerp(1.3,1.12,e);if(u>.45){K.root.parentNode.setAttribute("clip-path","url(#bedclip)");K.castOff=true}},function(){
-      play("dress",.25);later(.5,function(){K.p.sleep=true});later(1.3,function(){play("click",.45);anim(.5,function(u){o.glow.setAttribute("opacity",(.25*(1-u)).toFixed(3));o.shade.setAttribute("fill",u>.3?"#D2B205":"#FFD326");o.night.setAttribute("opacity",(.28*u).toFixed(3))})});later(3.2,cb)})})}
+      play("dress",.25);later(.5,function(){K.p.sleep=true});later(1.3,function(){play("click",.45);anim(.5,function(u){o.glow.setAttribute("opacity",(.25*(1-u)).toFixed(3));o.shade.setAttribute("fill",u>.3?"#D2B205":"#FFD326");o.night.setAttribute("opacity",(.28*u).toFixed(3))})});later(1.6,cb)})})}
 function cartKitchen(K,o,C,cb){/* режет огурец на доске: левой рукой держит огурец, в правой нож */
   var tb=el("g",{},C.g);el("rect",{x:380,y:780,width:780,height:30,rx:10,fill:"#C77A62"},tb);el("rect",{x:400,y:810,width:740,height:240,fill:"#D3A598"},tb);Ln(tb,"M420 900 H1120","#C77A62",5,.6);
   el("rect",{x:690,y:764,width:380,height:18,rx:8,fill:"#E3B27A"},tb);el("circle",{cx:1050,cy:773,r:5,fill:"#C77A62"},tb);
@@ -845,7 +846,7 @@ function cartKitchen(K,o,C,cb){/* режет огурец на доске: ле�
   /* руки к доске */var la=L.a,lb=L.b,ra=R.a,rb=R.b;setL();var La=L.a,Lb=L.b;setR(bx(1000),by(670));var Ra=R.a,Rb=R.b;
   anim(.5,function(u){var e=eio(u);L.a=lerp(la,La,e);L.b=lerp(lb,Lb,e);R.a=lerp(ra,Ra,e);R.b=lerp(rb,Rb,e);knife.setAttribute("opacity",Math.min(1,u*3).toFixed(2));knife.setAttribute("transform","rotate("+f1(-(R.a+R.b))+")")},function(){
     var xs=[962,938,914,890,866,842],i=0;
-    (function chop(){if(i>=xs.length){K.p.happy=true;anim(.4,function(u){setR(bx(1000),by(lerp(676,640,u)))});later(1.9,cb);return}var x=xs[i++];
+    (function chop(){if(i>=xs.length){K.p.happy=true;anim(.4,function(u){setR(bx(1000),by(lerp(676,640,u)))});later(.7,cb);return}var x=xs[i++];
       anim(.14,function(u){setR(bx(lerp(x+20,x,u)),by(670))},function(){anim(.14,function(u){setR(bx(x),by(lerp(670,694,eio(u))))},function(){play("chop",.55);
         cuc.setAttribute("width",f1(x-760));drawDots(x);var c=el("g",{transform:"translate("+(1005+i*7)+" "+(755-i*1.5)+")"},sl);el("ellipse",{rx:13,ry:11,fill:"#4D9E10"},c);el("ellipse",{rx:9.5,ry:8,fill:"#CBF0A4"},c);[[-3,-2],[3,-2],[0,3]].forEach(function(q){el("circle",{cx:q[0],cy:q[1],r:1.6,fill:"#B6D58C"},c)});
         anim(.2,function(u){setR(bx(x),by(lerp(694,670,eio(u))))},chop)})})})()})}
@@ -873,14 +874,14 @@ function cartGarden(K,o,C,cb){/* подходит к высокой грядке
       car.remove();var hdL=K.arms[1].hdL,inH=el("g",{},null);hdL.insertBefore(inH,hdL.firstChild);var hc=carrot(inH);hc.setAttribute("transform","translate(0 -20)");
       var keep=function(){inH.setAttribute("transform","rotate("+f1(-(R.a+R.b+(K.lean||0)))+")")};keep();ticks.push(keep);
       play("pop",.6);later(.15,function(){anim(.7,function(u){var e=eout(u),lean=20*(1-e),sq=.05*(1-e);K.lean=lean;K.sq=sq;var q=reach(lerp(200,120,e),lerp(-130,-380,e),lean,sq);armTo(tmp,q.x,q.y,1);R.a=tmp.a;R.b=tmp.b},function(){
-        K.lean=0;K.p.happy=true;later(1.8,function(){ticks=ticks.filter(function(f){return f!==keep});cb()})})})})})}
+        K.lean=0;K.p.happy=true;later(.6,function(){ticks=ticks.filter(function(f){return f!==keep});cb()})})})})})}
 
-function cartFootball(K,o,C,cb){/* бьёт по мячу — мяч летит в ворота, сетка прогибается */var ball=el("g",{},C.g);el("circle",{r:28,fill:"#FFFFFF"},ball);P(ball,"M0 -10 L10 -2 L6 10 H-6 L-10 -2 Z","#2C3A5C");
-  var bx=860,by=920;ball.setAttribute("transform","translate("+bx+" "+by+")");anim(.5,function(u){K.x=lerp(768,700,eio(u))},function(){
+function cartFootball(K,o,C,cb){/* бьёт по мячу — мяч летит в ворота, сетка прогибается */var ball=el("g",{},C.g),bi=el("g",{transform:"scale(1.65)"},ball);el("circle",{r:28,fill:"#FFFFFF"},bi);P(bi,"M0 -10 L10 -2 L6 10 H-6 L-10 -2 Z","#2C3A5C");
+  var bx=880,by=888;ball.setAttribute("transform","translate("+bx+" "+by+")");anim(.5,function(u){K.x=lerp(768,700,eio(u))},function(){
     anim(.25,function(u){K.hop=Math.sin(Math.PI*u)*20;K.p.tilt=-6*Math.sin(Math.PI*u)},null);play("kick",.6);
     later(.1,function(){anim(.75,function(u){var x=lerp(bx,o.goal.x,u),y=lerp(by,o.goal.y,u)-Math.sin(Math.PI*u)*180,s=lerp(1,.75,u);ball.setAttribute("transform","translate("+f1(x)+" "+f1(y)+") scale("+s.toFixed(3)+") rotate("+f1(u*540)+")")},function(){
       anim(.6,function(u){o.net.setAttribute("transform","translate(0 "+f1(-Math.sin(Math.PI*u)*0)+") scale(1 "+(1+Math.sin(Math.PI*u)*.06).toFixed(3)+")")});
-      K.p.happy=true;anim(.6,function(u){var s=Math.sin(Math.PI*u);K.hop=s*40;K.pose[-1].a=lerp(10,150,s);K.pose[1].a=lerp(-10,-150,s)});later(2.2,cb)})})})}
+      K.p.happy=true;anim(.6,function(u){var s=Math.sin(Math.PI*u);K.hop=s*40;K.pose[-1].a=lerp(10,150,s);K.pose[1].a=lerp(-10,-150,s)});later(.9,cb)})})})}
 ITEMS.gardenBoots={name:"резиновые сапоги",layer:"shoes",body:function(g){[-1,1].forEach(function(s){var x=s*27;P(g,"M"+(x-29)+" -54 H"+(x+29)+" L"+(x+30)+" -22 Q"+(x+34)+" -16 "+(x+34)+" -8 Q"+(x+34)+" 4 "+(x+16)+" 4 H"+(x-16)+" Q"+(x-34)+" 4 "+(x-34)+" -8 Q"+(x-34)+" -16 "+(x-30)+" -22 Z","#4D9E10");
     el("rect",{x:x-31,y:-58,width:62,height:10,rx:5,fill:"#248C43"},g);el("rect",{x:x-34,y:-6,width:68,height:10,rx:5,fill:"#248C43"},g);Ln(g,"M"+(x-14)+" -44 V-24","#FFFFFF",5,.5)})},
   icon:sidePair(bootSide("#4D9E10",-64,"#248C43","#248C43",false,true))};
@@ -897,7 +898,7 @@ var STAR3=[
  {kind:"boy",bg:"pool",ctx:"Мы идём в бассейн.",task:"Одень мальчика.",noShirt:true,ok:["trunks","swimcapB","goggles","armbands"],no:["puffer","jeans"],cartoon:"pool"},
  {kind:"girl",bg:"bedroom",ctx:"Пора спать.",task:"Одень девочку.",ok:["pajamaTopG","pajamaPantsG"],no:["jacket","sandals"],cartoon:"sleep"}];
 var STAR4=[
- {kind:"girl",bg:"kitchen",base:["tshirt","shorts"],ctx:"Будем готовить.",task:"Одень девочку.",ok:["apron","kerchief"],no:["helmet","rainboots"],cartoon:"kitchen"},
+ {kind:"girl",bg:"kitchen",base:["tshirt","shorts","slippers"],ctx:"Будем готовить.",task:"Одень девочку.",ok:["apron","kerchief"],no:["helmet","rainboots"],cartoon:"kitchen"},
  {kind:"boy",bg:"bike",base:["teeY","shorts"],ctx:"Будем кататься на велосипеде.",task:"Одень мальчика.",ok:["helmet","pads","sneakers"],no:["valenki","knitHat","scarf"],cartoon:"bike"},
  {kind:"girl",bg:"garden",base:["tshirt","shorts"],ctx:"Будем работать в огороде.",task:"Одень девочку.",ok:["gardenBoots","gloves","panama"],no:["shoes","goggles","swimsuit"],cartoon:"garden"},
  {kind:"boy",bg:"field",base:["shorts"],ctx:"Будем играть в футбол.",task:"Одень мальчика.",ok:["fShirt","socks","cleats"],no:["pajama","umbrella","swimcapB"],cartoon:"football"}];
@@ -935,7 +936,7 @@ function bgParty(){var g=el("g",{},null),o={g:g};
   el("rect",{x:-10,y:-10,width:1556,height:880,fill:"#FBC8BE"},g);var st="";for(var x=0;x<1546;x+=64)st+="M"+x+" 0 V860 ";Ln(g,st,"#FDD1DD",22,.6);
   frameW(g,200,200,300,260,"#ADC6FD","#BC91E6");
   el("rect",{x:640,y:250,width:200,height:150,rx:12,fill:"#C77A62"},g);el("rect",{x:656,y:266,width:168,height:118,rx:6,fill:"#D6E7FC"},g);P(g,"M670 370 L720 310 L760 350 L790 320 L812 370 Z","#4D9E10");el("circle",{cx:790,cy:296,r:14,fill:"#FFD326"},g);
-  var fl=["#FFD326","#6B91D5","#FE88A8","#4D9E10","#FF8725"];Ln(g,"M0 120 Q768 230 1536 120","#FFFFFF",4);for(var i=0;i<16;i++){var x=60+i*96,y=120+Math.sin(i/15*Math.PI)*108;P(g,"M"+(x-22)+" "+(y-4)+" L"+(x+22)+" "+(y+2)+" L"+x+" "+(y+44)+" Z",fl[i%5])}
+  var fl=["#FFD326","#6B91D5","#FE88A8","#4D9E10","#FF8725"];Ln(g,"M0 120 Q768 230 1536 120","#FFFFFF",4);for(var i=0;i<16;i++){var x=60+i*96,tq=x/1536,y=120+220*tq*(1-tq);P(g,"M"+(x-22)+" "+(y-4)+" L"+(x+22)+" "+(y+2)+" L"+x+" "+(y+44)+" Z",fl[i%5])}
   o.balloons=[];[[90,420,"#FC3529"],[170,380,"#6B91D5"],[1460,360,"#FFD326"],[1390,410,"#BC91E6"],[1470,470,"#4D9E10"]].forEach(function(b,i){var bg2=el("g",{},g);Ln(bg2,"M0 50 Q-10 160 6 330","#FFFFFF",3);el("ellipse",{cx:0,cy:0,rx:46,ry:56,fill:b[2]},bg2);el("ellipse",{cx:-16,cy:-20,rx:10,ry:16,fill:"#FFFFFF",opacity:.5},bg2);P(bg2,"M-6 54 H6 L0 46 Z",b[2]);o.balloons.push({g:bg2,x:b[0],y:b[1],p:i})});
   planks(g,860,1044,"#C77A62","#A17269");
   /* стол справа с угощениями и тортом */var tb=el("g",{},g);el("rect",{x:900,y:640,width:520,height:30,rx:8,fill:"#FFFFFF"},tb);P(tb,"M900 666 H1420 V760 Q1395 780 1370 760 Q1345 780 1320 760 Q1295 780 1270 760 Q1245 780 1220 760 Q1195 780 1170 760 Q1145 780 1120 760 Q1095 780 1070 760 Q1045 780 1020 760 Q995 780 970 760 Q945 780 920 760 Q910 770 900 760 Z","#FE88A8");
@@ -1091,7 +1092,10 @@ var VBASE="https://cdn.jsdelivr.net/gh/pandora28546-lab/wardrobe@main/w2/",VOICE
 ["i1","i2","i3","i4","zhar","dozhd","sneg","osen","sport","prazd","bass","son","kuh","vel","og","fut","d","m"].forEach(function(k){var a=new Audio();a.preload="auto";
   a.addEventListener("loadedmetadata",function(){if(isFinite(a.duration)&&a.duration>0)a.dur=a.duration});a.src=VBASE+k+".m4a";VOICE[k]=a});
 var BGV={sun:"zhar",rain:"dozhd",winter:"sneg",autumn:"osen",gym:"sport",party:"prazd",pool:"bass",bedroom:"son",kitchen:"kuh",bike:"vel",garden:"og",field:"fut"};
-function sayVoice(k){var a=VOICE[k];if(!soundOn||!a||!a.dur)return 0;try{a.pause();a.currentTime=0;a.volume=1}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){});return a.dur+.15}
+function sayVoice(k){var a=VOICE[k];if(!soundOn||!a)return 0;try{a.pause();a.currentTime=0;a.volume=1}catch(e){}
+  if(!a.rw){a.rw=1;a.addEventListener("ended",function(){try{a.currentTime=0}catch(e){}})}
+  a.muted=true;var un=function(){a.removeEventListener("playing",un);setTimeout(function(){a.muted=false},40)};a.addEventListener("playing",un);setTimeout(function(){a.muted=false},400);
+  var p=a.play();if(p&&p.catch)p.catch(function(){a.muted=false});return a.dur?a.dur+.15:0}
 function say(i,cb){hl(i);var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);later(d,function(){hl(-1);if(cb)cb()});return d}
 
 /* ───────── камера ───────── */
@@ -1137,11 +1141,12 @@ function runS1(o,cb){var t0=clock,c0=[0,0,1536,1024],c1=[170,110,1196,797];CAM=c
   ticks.push(o.live);
   /* смотрит на шкаф и размышляет: голова медленно поворачивается к одной вещи, к другой, чуть наклоняется */
   anim(1.6,function(u){var e=eio(u);o.headX=-14*e;o.headT=-7*e},null,.6);
-  later(1.0,function(){say(0)});
+  var fin1=false,end1=function(){if(fin1)return;fin1=true;ticks=ticks.filter(function(f){return f!==o.live});cb()};
+  later(1.0,function(){say(0,function(){later(1.3,end1)})});
   anim(1.8,function(u){var e=eio(u);o.headX=lerp(-14,12,e);o.headT=lerp(-7,6,e)},null,3.0);
   anim(1.6,function(u){var e=eio(u);o.headX=lerp(12,-4,e);o.headT=lerp(6,10,e)},null,5.6);
   anim(1.4,function(u){var e=eio(u);o.headX=lerp(-4,0,e);o.headT=lerp(10,0,e)},null,8.0);
-  later(10.6,function(){ticks=ticks.filter(function(f){return f!==o.live});cb()})}
+  later(10.6,end1)}
 
 /* 2. Дождь: девочка идёт сбоку, камера ведёт; раскрывает зонт, шлёпает по луже */
 var S2W=2700,S2PUD=[[2120,950,150],[900,960,70],[2560,940,80]];
@@ -1196,18 +1201,18 @@ function buildS3(g){var o=bedroom();shadeAll(o.g);g.appendChild(o.g);
 function runS3(o,cb){var K=o.K;camFn=null;
   o.live=function(t){poseKid(K,t)};ticks.push(o.live);
   /* зевает и потягивается */
-  anim(1.3,function(u){var s=Math.sin(Math.PI*u);K.p.yawn=s;K.pose[-1].a=lerp(10,150,s);K.pose[1].a=lerp(-10,-150,s);K.pose[-1].b=lerp(0,30,s);K.pose[1].b=lerp(0,-30,s);K.p.tilt=s*-4},null,1.4);
-  later(1.8,function(){say(2)});
+  anim(1.2,function(u){var s=Math.sin(Math.PI*u);K.p.yawn=s;K.pose[-1].a=lerp(10,150,s);K.pose[1].a=lerp(-10,-150,s);K.pose[-1].b=lerp(0,30,s);K.pose[1].b=lerp(0,-30,s);K.p.tilt=s*-4},null,1.0);
+  later(1.6,function(){say(2)});
   /* прыгает в кровать: голова на подушку, одеяло спереди закрывает пижаму */
   var bx=1120,by=1060;
-  later(3.2,function(){var xw=K.x;play("steps",.35);
-    anim(2.2,function(u){var e=u<.85?u/.85*.94:(.94+.06*eout((u-.85)/.15)),ph=u*2.2*2*Math.PI/.62,w=u<.9?1:Math.max(0,(1-u)/.1);
+  later(2.4,function(){var xw=K.x;play("steps",.35);
+    anim(1.8,function(u){var e=u<.85?u/.85*.94:(.94+.06*eout((u-.85)/.15)),ph=u*1.8*2*Math.PI/.62,w=u<.9?1:Math.max(0,(1-u)/.1);
       K.x=lerp(xw,760,e);K.hop=Math.abs(Math.sin(ph))*8*w;K.p.tilt=Math.sin(ph)*3*w;K.pose[-1].a=10+Math.sin(ph)*8*w;K.pose[1].a=-10+Math.sin(ph)*8*w},function(){stopSnd("steps");K.p.tilt=0;K.hop=0;
     var x0=K.x,y0=K.gy;anim(.75,function(u){var e=eio(u);K.x=lerp(x0,bx,e);K.gy=lerp(y0,by,e)-Math.sin(Math.PI*u)*70;K.gs=lerp(1.3,1.12,e);if(u>.45){o.kidL.setAttribute("clip-path","url(#bedclip)");K.castOff=true}},function(){
     play("dress",.25);anim(.5,function(u){K.sq=Math.sin(Math.PI*u)*.04});
-    later(.5,function(){K.p.sleep=true});
-    later(1.3,function(){play("click",.45);anim(.5,function(u){o.glow.setAttribute("opacity",(.25*(1-u)).toFixed(3));o.shade.setAttribute("fill",u>.3?"#D2B205":"#FFD326");o.night.setAttribute("opacity",(.28*u).toFixed(3))})});
-    later(4.2,function(){ticks=ticks.filter(function(f){return f!==o.live});cb()})})})})}
+    later(.4,function(){K.p.sleep=true});
+    later(.9,function(){play("click",.45);anim(.5,function(u){o.glow.setAttribute("opacity",(.25*(1-u)).toFixed(3));o.shade.setAttribute("fill",u>.3?"#D2B205":"#FFD326");o.night.setAttribute("opacity",(.28*u).toFixed(3))})});
+    later(1.8,function(){ticks=ticks.filter(function(f){return f!==o.live});cb()})})})})}
 
 /* 4. Велосипед: сбоку, камера ведёт, в конце звонок */
 var S4W=2900;
@@ -1256,19 +1261,19 @@ function poseS4(o,t){var gs=1.35,x=o.x;o.R.setAttribute("transform","translate("
   var c=o.ca||0;o.crank.setAttribute("transform","translate(-20 -92) rotate("+f1(-c*180/Math.PI)+")");
   o.T.setAttribute("transform","rotate(-12 0 -170)");o.T2.setAttribute("transform","rotate(-12 0 -170)");
   /* педали: в координатах RB (смещение 20,-30) */
-  [[o.legN,0],[o.legF,Math.PI]].forEach(function(a){var p=c+a[1],px=-20+Math.cos(p)*34-24,py=-92+Math.sin(p)*34+35-16;legTo(a[0],px,py,1);setSLeg(a[0])});
+  [[o.legN,0],[o.legF,Math.PI]].forEach(function(a){var p=-c+a[1],px=-20+Math.cos(p)*34-24,py=-92+Math.sin(p)*34+35-16;legTo(a[0],px,py,1);setSLeg(a[0])});
   /* руки к рулю (с учётом наклона корпуса) */
   var th=rad(-12),hx=-118-24,hy=-262+35,dx=hx-0,dy=hy+170,lx=dx*Math.cos(-th)-dy*Math.sin(-th),ly=dx*Math.sin(-th)+dy*Math.cos(-th)-170;
   if(o.ring>0){armTo(o.armN,lx+lerp(0,6,o.ring),ly-o.ring*16,-1)}else armTo(o.armN,lx,ly,-1);setSArm(o.armN);armTo(o.armF,lx-6,ly+6,-1);setSArm(o.armF);
   sideBlink(o.head,t,o.happy);
   o.shadow.setAttribute("cx",f1(x-30));if(o.cast)o.cast.sync()}
-function runS4(o,cb){o.x=300;o.wa=0;o.ca=0;var X0=300,X1=2420,D=8.6;
+function runS4(o,cb){o.x=300;o.wa=0;o.ca=0;var X0=300,X1=1800,D=6.2;
   camFn=function(){var cx=clamp(o.x-1536*.42,0,S4W-1536);CAM=[o.x0+cx,0,1536,1024]};
   var lastX=o.x;o.live=function(t,dt){o.tick(t,dt);var dx=o.x-lastX;lastX=o.x;o.wa+=dx/(86*1.35);o.ca+=dx/(86*1.35)*.55;poseS4(o,t)};ticks.push(o.live);
   anim(D,function(u){var e=u<.12?(u/.12)*(u/.12)*.06:u<.8?.06+(u-.12)/.68*.8:.86+.14*eout((u-.8)/.2);o.x=lerp(X0,X1,e)},function(){
     /* звонок большим пальцем */
-    play("bell",.55);anim(.25,function(u){o.ring=Math.sin(Math.PI*u)},null,0);anim(.25,function(u){o.ring=Math.sin(Math.PI*u)},function(){o.ring=0;o.happy=true;later(2.0,function(){ticks=ticks.filter(function(f){return f!==o.live});cb()})},.25)});
-  later(2.4,function(){say(3)})}
+    play("bell",.55);anim(.25,function(u){o.ring=Math.sin(Math.PI*u)},null,0);anim(.25,function(u){o.ring=Math.sin(Math.PI*u)},function(){o.ring=0;o.happy=true;later(1.0,function(){ticks=ticks.filter(function(f){return f!==o.live});cb()})},.25)});
+  later(2.0,function(){say(3)})}
 
 var INTRO_SCRIPT=[
  {who:"Сцена 1 · шкаф",txt:"Одежды бывает много. Её выбирают по погоде и по случаю.",v:"i1"},
@@ -1279,9 +1284,9 @@ var S1,S2,S3,S4;
 function buildIntro(){SC=[];S1=scene(buildS1,1536);S2=scene(buildS2,S2W);S3=scene(buildS3,1536);S4=scene(buildS4,S4W)}
 function runIntro(){show(S1);
   runS1(S1,function(){show(S2);S2.x=420;poseS2(S2,clock);var c=[S2.x0,0,1536,1024];
-    panTo(c,1.4,function(){hide(S1);runS2(S2,function(){fadeSnd("rain",1.2);show(S3);
-      panTo([S3.x0,0,1536,1024],1.4,function(){hide(S2);runS3(S3,function(){show(S4);S4.x=300;poseS4(S4,clock);
-        panTo([S4.x0,0,1536,1024],1.4,function(){hide(S3);runS4(S4,function(){starDone(0)})})})})})})})}
+    panTo(c,1.2,function(){hide(S1);runS2(S2,function(){fadeSnd("rain",1.2);show(S3);poseKid(S3.K,clock);
+      panTo([S3.x0,0,1536,1024],1.2,function(){hide(S2);runS3(S3,function(){show(S4);S4.x=300;poseS4(S4,clock);
+        panTo([S4.x0,0,1536,1024],1.2,function(){hide(S3);runS4(S4,function(){starDone(0)})})})})})})})}
 
 /* ═════════ ЗВЕЗДА 2 — РАУНДЫ: одень по погоде ═════════ */
 var ROUNDS=[
@@ -1365,12 +1370,13 @@ function round1(R,idx,cb,fadeIn){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),o=b
     /* поднимает палочку ко рту и дует; пузыри летят; потом радуется */
     anim(.6,function(u){var e=eio(u);armTo(tmp,lerp(60,90,e),lerp(-150,-292,e),1);P1.a=lerp(-10,tmp.a,e);P1.b=lerp(0,tmp.b,e);W.setAttribute("opacity",Math.min(1,u*3).toFixed(2))},function(){
       emit=true;K.p.blow=true;play("bubbles",.5);later(3.0,function(){play("bubbles",.5)});anim(5.6,function(u){K.p.tilt=Math.sin(u*Math.PI*5)*2},function(){emit=false;K.p.blow=false;K.p.happy=true;
-        anim(.5,function(u){var e=eio(u);P1.a=lerp(tmp.a,-10,e);P1.b=lerp(tmp.b,0,e)},function(){W.remove();later(2.6,function(){ticks=ticks.filter(function(f){return f!==live});cb()})})})})}
-  function cartoonPuddle(){var x0=K.x,x1=920,L=K.pose[-1];play("splash",.4);
-    var seq=[{d:.5,u:function(u){K.x=lerp(x0,x1,eio(u));K.hop=Math.sin(Math.PI*u)*120;L.a=lerp(10,60,Math.sin(Math.PI*u))}},
-             {d:.65,u:function(u){K.hop=Math.sin(Math.PI*u)*80;L.a=lerp(10,50,Math.sin(Math.PI*u))}},
-             {d:.65,u:function(u){K.hop=Math.sin(Math.PI*u)*80;L.a=lerp(10,50,Math.sin(Math.PI*u))}}];
-    var i=0;(function nx(){if(i>=seq.length){K.p.happy=true;later(1.4,cb);return}var s=seq[i++];anim(s.d,s.u,function(){K.hop=0;splash(K.x,950,.9);anim(.18,function(u){K.sq=Math.sin(Math.PI*u)*.06});if(i===seq.length)K.p.happy=true;nx()})})()}}
+        anim(.5,function(u){var e=eio(u);P1.a=lerp(tmp.a,-10,e);P1.b=lerp(tmp.b,0,e)},function(){W.remove();later(.5,function(){ticks=ticks.filter(function(f){return f!==live});cb()})})})})}
+  function cartoonPuddle(){var x0=K.x,x1=920,L=K.pose[-1],a=AUD.splash,LT=[0,.5,1.15,1.8],t0=clock,tt=0,land=0;play("splash",.4);
+    var live=function(){var at=(a&&!a.paused&&a.currentTime>0)?a.currentTime:0;tt=Math.max(tt,at||clock-t0);
+      if(tt>=1.8){if(land<3){land=3;splash(K.x,950,.9);anim(.18,function(u){K.sq=Math.sin(Math.PI*u)*.06})}K.hop=0;L.a=10;ticks=ticks.filter(function(f){return f!==live});K.p.happy=true;later(.5,cb);return}
+      var j=tt<.5?0:tt<1.15?1:2,u=(tt-LT[j])/(LT[j+1]-LT[j]);if(j>land){land=j;splash(K.x,950,.9);anim(.18,function(v){K.sq=Math.sin(Math.PI*v)*.06})}
+      if(j===0)K.x=lerp(x0,x1,eio(u));K.hop=Math.sin(Math.PI*u)*(j===0?120:80);L.a=lerp(10,j===0?60:50,Math.sin(Math.PI*u))};
+    ticks.push(live)}}
 function endPreview(){hl(-1);musicHold(true);play("correct",.8);later(.45,function(){play("praise")});later(1.95,function(){starDone(CUR_STAR-1)})}
 SVG.addEventListener("pointermove",function(e){if(G2.move)G2.move(e)});
 SVG.addEventListener("pointerup",function(e){if(G2.up)G2.up(e)});
@@ -1379,11 +1385,13 @@ function starScript(){var o=[];STARS[CUR_STAR].forEach(function(R,i){o.push({who
 
 /* ───────── звезда ───────── */
 var starBacks=[].slice.call(document.querySelectorAll(".sg-starback")),BIG=document.getElementById("sg-bigstar");
-function starDone(slot){play("star");launchFireworks();BIG.style.display="block";var gr=GAME.getBoundingClientRect(),br=starBacks[slot].getBoundingClientRect();
-  var dx=br.left+br.width/2-(gr.left+gr.width/2),dy=br.top+br.height/2-(gr.top+gr.height/2),bw=BIG.getBoundingClientRect().width||BIG.offsetWidth||150,ts=br.width/(bw||150)*.9;
-  anim(.45,function(u){BIG.style.transform="translate(-50%,-50%) scale("+back(u).toFixed(3)+")"},function(){
-    anim(.7,function(u){var e=eio(u);BIG.style.transform="translate(calc(-50% + "+(dx*e).toFixed(1)+"px),calc(-50% + "+(dy*e).toFixed(1)+"px)) scale("+lerp(1,ts,e).toFixed(3)+")"},function(){
-      BIG.style.display="none";starBacks[slot].classList.add("sg-earned");starBacks[slot].classList.remove("sg-pulse");void starBacks[slot].offsetWidth;starBacks[slot].classList.add("sg-pulse")},.3)})}
+function starDone(slot,cb){play("star");launchFireworks();BIG.style.display="block";BIG.style.transform="translate(-50%,-50%) scale(0)";var gr=GAME.getBoundingClientRect(),br=starBacks[slot].getBoundingClientRect();
+  var dx=br.left+br.width/2-(gr.left+gr.width/2),dy=br.top+br.height/2-(gr.top+gr.height/2),bw=BIG.offsetWidth||150,ts=br.width/bw*.9,T0="translate(-50%,-50%) ";
+  function done(){BIG.style.display="none";starBacks[slot].classList.add("sg-earned");starBacks[slot].classList.remove("sg-pulse");void starBacks[slot].offsetWidth;starBacks[slot].classList.add("sg-pulse");if(cb)later(1.6,cb)}
+  if(!BIG.animate){BIG.style.transform=T0+"scale(1)";setTimeout(done,1200);return}
+  var a=BIG.animate([{transform:T0+"scale(0)"},{transform:T0+"scale(1.15)",offset:.65},{transform:T0+"scale(1)"}],{duration:450,easing:"ease-out",fill:"forwards"});
+  a.onfinish=function(){var b=BIG.animate([{transform:T0+"scale(1)"},{transform:"translate(calc(-50% + "+dx.toFixed(1)+"px),calc(-50% + "+dy.toFixed(1)+"px)) scale("+ts.toFixed(3)+")"}],{duration:700,delay:300,easing:"ease-in-out",fill:"forwards"});
+    b.onfinish=function(){done();b.cancel();a.cancel()}}}
 var fwC=document.getElementById("sg-fireworks"),c2d=fwC.getContext("2d"),fwP=[],fwRun=false,fwRaf=null;
 function launchFireworks(){fwC.width=GAME.offsetWidth;fwC.height=GAME.offsetHeight;fwP=[];fwRun=true;spawnBurst();spawnBurst();if(!fwRaf)fwLoop();setTimeout(function(){fwRun=false},1500)}
 function spawnBurst(){var x=.2+Math.random()*.6,y=.1+Math.random()*.5,cols=["#6DCC0B","#F97A4F","#FED224","#E4615C","#6B91D6","#FC88A7"],col=cols[Math.floor(Math.random()*cols.length)];
