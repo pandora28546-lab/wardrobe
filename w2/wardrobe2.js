@@ -1099,7 +1099,7 @@ function runS2(o,cb){o.x=420;o.uRot=-112;o.open=0;o.hold=null;var X0=360,X1=980,
     later(1.3,function(){walk(X1,X2,2.6,function(){later(.6,function(){ticks=ticks.filter(function(f){return f!==o.live});cb()})})})});
   /* дождь начинается, пока она идёт */
   anim(1.0,function(u){o.rainOn=u;o.dark.setAttribute("opacity",(.05+.2*u).toFixed(3))},null,1.2);later(1.2,function(){play("rain",.0);var a=AUD.rain;try{a.loop=true}catch(e){}anim(1.0,function(u){try{a.volume=u*.4}catch(e){}})});
-  later(1.4,function(){say(1)})}
+  later(2.8,function(){say(1)})}
 
 /* 3. Сон: спереди, камера стоит */
 function buildS3(g){var o=bedroom();shadeAll(o.g);g.appendChild(o.g);
@@ -1108,11 +1108,11 @@ function buildS3(g){var o=bedroom();shadeAll(o.g);g.appendChild(o.g);
 function runS3(o,cb){var K=o.K;camFn=null;
   o.live=function(t){poseKid(K,t)};ticks.push(o.live);
   /* зевает и потягивается */
-  anim(1.2,function(u){var s=Math.sin(Math.PI*u);K.p.yawn=s;K.pose[-1].a=lerp(10,150,s);K.pose[1].a=lerp(-10,-150,s);K.pose[-1].b=lerp(0,30,s);K.pose[1].b=lerp(0,-30,s);K.p.tilt=s*-4},null,.6);
-  later(.8,function(){say(2)});
+  anim(1.2,function(u){var s=Math.sin(Math.PI*u);K.p.yawn=s;K.pose[-1].a=lerp(10,150,s);K.pose[1].a=lerp(-10,-150,s);K.pose[-1].b=lerp(0,30,s);K.pose[1].b=lerp(0,-30,s);K.p.tilt=s*-4},null,1.4);
+  later(1.8,function(){say(2)});
   /* прыгает в кровать: голова на подушку, одеяло спереди закрывает пижаму */
   var bx=1120,by=1060;
-  later(1.9,function(){var xw=K.x;play("steps",.35);
+  later(3.2,function(){var xw=K.x;play("steps",.35);
     anim(1.8,function(u){var e=u<.85?u/.85*.94:(.94+.06*eout((u-.85)/.15)),ph=u*1.8*2*Math.PI/.62,w=u<.9?1:Math.max(0,(1-u)/.1);
       K.x=lerp(xw,760,e);K.hop=Math.abs(Math.sin(ph))*8*w;K.p.tilt=Math.sin(ph)*3*w;K.pose[-1].a=10+Math.sin(ph)*8*w;K.pose[1].a=-10+Math.sin(ph)*8*w},function(){stopSnd("steps");K.p.tilt=0;K.hop=0;
     var x0=K.x,y0=K.gy;anim(.75,function(u){var e=eio(u);K.x=lerp(x0,bx,e);K.gy=lerp(y0,by,e)-Math.sin(Math.PI*u)*70;K.gs=lerp(1.3,1.12,e);if(u>.45){o.kidL.setAttribute("clip-path","url(#bedclip)");K.castOff=true}},function(){
@@ -1180,7 +1180,7 @@ function runS4(o,cb){o.x=300;o.wa=0;o.ca=0;var X0=300,X1=1700,D=5.4;
   anim(D,function(u){var e=u<.12?(u/.12)*(u/.12)*.06:u<.8?.06+(u-.12)/.68*.8:.86+.14*eout((u-.8)/.2);o.x=lerp(X0,X1,e)},function(){
     /* звонок большим пальцем */
     play("bell",.55);anim(.25,function(u){o.ring=Math.sin(Math.PI*u)},null,0);anim(.25,function(u){o.ring=Math.sin(Math.PI*u)},function(){o.ring=0;o.happy=true;later(1.6,function(){ticks=ticks.filter(function(f){return f!==o.live});cb()})},.25)});
-  later(1.2,function(){say(3)})}
+  later(2.4,function(){say(3)})}
 
 var INTRO_SCRIPT=[
  {who:"Сцена 1 · шкаф",txt:"Одежды бывает много. Её выбирают по погоде и по случаю.",v:"i1"},
@@ -1239,7 +1239,7 @@ function round1(R,idx,cb,fadeIn){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),o=b
       var nL=Math.ceil(ord.length/2),nR=ord.length-nL;function slot(i){var left=i<nL,n=left?nL:nR,j=left?i:i-nL,y=(n===3?[400,645,890]:n===2?[522,768]:[645])[j];return [left?215:1321,y]}
       ord.forEach(function(k,i){var T=makeTile(k,slot(i),TL,K,R.ok.indexOf(k)>=0);tiles.push(T);T.g.setAttribute("opacity",0);anim(.4,function(u){T.g.setAttribute("opacity",eio(u).toFixed(2))},null,i*.06)});
       later(.5,function(){canDrag=true;sndVol(amb,ambV*.35,1.2)})});
-    later(.8,function(){say(idx*2+1,function(){
+    later(1.2,function(){say(idx*2+1,function(){
       /* подсказка — только в первом раунде звезды: одна нужная вещь сама тянется к ребёнку */
       if(CUR_STAR===2&&idx===0&&worn===0&&!drag){var T=tiles.filter(function(t){return t.ok&&!t.done})[0];var p0={x:T.cx,y:T.cy};anim(1.4,function(u){if(T.done||(drag&&drag.T===T)||T.hintStop){T.hintStop=true;return}var s=Math.sin(Math.PI*u)*.45;T.cx=lerp(p0.x,768,s);T.cy=lerp(p0.y,600,s);placeTile(T)},function(){if(T.hintStop||T.done)return;T.cx=p0.x;T.cy=p0.y;placeTile(T)})}})})});
   function makeTile(key,pos,parent,Kref,ok){var it=ITEMS[key],T={key:key,it:it,ok:ok,home:{x:pos[0],y:pos[1]},cx:pos[0],cy:pos[1],s:1};
