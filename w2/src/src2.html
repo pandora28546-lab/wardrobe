@@ -1191,7 +1191,7 @@ function runS2(o,cb){o.x=420;o.uRot=-112;o.open=0;o.hold=null;var X0=360,X1=980,
     later(1.3,function(){walk(X1,X2,2.6,function(){later(.6,function(){ticks=ticks.filter(function(f){return f!==o.live});cb()})})})});
   /* дождь начинается, пока она идёт */
   anim(1.0,function(u){o.rainOn=u;o.dark.setAttribute("opacity",(.05+.2*u).toFixed(3))},null,1.2);later(1.2,function(){play("rain",.0);var a=AUD.rain;try{a.loop=true}catch(e){}anim(1.0,function(u){try{a.volume=u*.4}catch(e){}})});
-  later(2.8,function(){say(1)})}
+  later(2.0,function(){say(1)})}
 
 /* 3. Сон: спереди, камера стоит */
 function buildS3(g){var o=bedroom();shadeAll(o.g);g.appendChild(o.g);
@@ -1272,7 +1272,7 @@ function runS4(o,cb){o.x=300;o.wa=0;o.ca=0;var X0=300,X1=1700,D=5.4;
   anim(D,function(u){var e=u<.12?(u/.12)*(u/.12)*.06:u<.8?.06+(u-.12)/.68*.8:.86+.14*eout((u-.8)/.2);o.x=lerp(X0,X1,e)},function(){
     /* звонок большим пальцем */
     play("bell",.55);anim(.25,function(u){o.ring=Math.sin(Math.PI*u)},null,0);anim(.25,function(u){o.ring=Math.sin(Math.PI*u)},function(){o.ring=0;o.happy=true;later(1.6,function(){ticks=ticks.filter(function(f){return f!==o.live});cb()})},.25)});
-  later(2.4,function(){say(3)})}
+  later(1.6,function(){say(3)})}
 
 var INTRO_SCRIPT=[
  {who:"Сцена 1 · шкаф",txt:"Одежды бывает много. Её выбирают по погоде и по случаю.",v:"i1"},
@@ -1308,11 +1308,11 @@ function runStar2(){earnedBefore();var L=STARS[CUR_STAR],i=START_R;(function nex
 function bgFor(R,idx){seed=100+idx+CUR_STAR*10;var b=R.bg;
   return shadeAll(b==="sun"?makeStreet(1536,"playground",[]):b==="rain"?makeStreet(1536,"yard",[[930,950,150],[300,962,70],[1330,940,64]]):b==="winter"?makeWinter():b==="autumn"?makeAutumn():
     b==="gym"?bgGym():b==="party"?bgParty():b==="pool"?bgPool2():b==="bedroom"?bgBedroom():b==="kitchen"?bgKitchen():b==="bike"?bgBike():b==="garden"?bgGarden():bgField())}
-function round(R,idx,cb){if(G2.prev&&!G2.instant){var p=G2.prev;G2.prev=null;round1(R,idx,cb,false);
+function round(R,idx,cb){if(G2.prev&&!G2.instant){var p=G2.prev;G2.prev=null;round1(R,idx,cb,false,.55);
     ROOT.appendChild(p.g);if(p.bg)BGROOT.appendChild(p.bg);
     anim(.5,function(u){var v=(1-eio(u)).toFixed(2);p.g.setAttribute("opacity",v);if(p.bg)p.bg.setAttribute("opacity",v)},function(){p.g.remove();if(p.bg)p.bg.remove();if(p.o)ticks=ticks.filter(function(f){return f!==p.o.tick})});return}
   round1(R,idx,cb,false)}
-function round1(R,idx,cb,fadeIn){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),o=bgFor(R,idx);bgG.appendChild(o.g);
+function round1(R,idx,cb,fadeIn,qd){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),o=bgFor(R,idx);bgG.appendChild(o.g);
   ticks.push(o.tick);camFn=null;CAM=[77,51,1382,921];anim(3.2,function(u){var e=eio(u);CAM=[lerp(77,0,e),lerp(51,0,e),lerp(1382,1536,e),lerp(921,1024,e)]});
   var VE=el("rect",{x:-10,y:-10,width:1556,height:1044,fill:"#EAF1FF",opacity:0},bgG),KL=el("g",{},g),TL=el("g",{},g),DL=el("g",{},g);
   var cur={g:g,bg:bgG,o:o};if(G2.prev&&G2.instant){G2.prev.g.remove();if(G2.prev.bg)G2.prev.bg.remove();G2.instant=false}if(fadeIn){g.setAttribute("opacity",0);bgG.setAttribute("opacity",0);anim(.5,function(u){var v=eio(u).toFixed(2);g.setAttribute("opacity",v);bgG.setAttribute("opacity",v)})}G2.prev=cur;
@@ -1320,7 +1320,7 @@ function round1(R,idx,cb,fadeIn){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),o=b
   o.bubL=el("g",{},null);
   var K=null,tiles=[],need=R.ok.length,worn=0,canDrag=false;G2.tiles=tiles;
   var amb={sun:"ambS",rain:"ambR",winter:"ambW",autumn:"ambA",pool:"ambP",bike:"ambS",garden:"ambS",field:"ambF",kitchen:"ambK",gym:"ambG",party:"ambPA",bedroom:"ambN"}[R.bg]||"none",ambV={ambR:.45,ambW:.45,ambA:.5,ambP:.3,ambG:.7,ambPA:.6,ambN:.8}[amb]||.9;
-  musicHold(true);var keepAmb=G2.prevAmb===amb;if(G2.prevAmb&&!keepAmb)fadeSnd(G2.prevAmb,.5);G2.prevAmb=null;if(keepAmb)sndVol(amb,ambV,.5);else{play(amb,ambV);try{AUD[amb].loop=true}catch(e){}}
+  later(qd||0,function(){musicHold(true);var keepAmb=G2.prevAmb===amb;if(G2.prevAmb&&!keepAmb)fadeSnd(G2.prevAmb,.5);G2.prevAmb=null;if(keepAmb)sndVol(amb,ambV,.5);else{play(amb,ambV);try{AUD[amb].loop=true}catch(e){}}
   say(idx*2,function(){
     VE.setAttribute("opacity",0);anim(.6,function(u){VE.setAttribute("opacity",(.4*eio(u)).toFixed(3))});bgBlur(true);
     later(.6,function(){ticks=ticks.filter(function(f){return f!==o.tick})});
@@ -1333,7 +1333,7 @@ function round1(R,idx,cb,fadeIn){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),o=b
       later(.5,function(){canDrag=true;sndVol(amb,ambV*.35,1.2)})});
     later(1.2,function(){say(idx*2+1,function(){
       /* подсказка — только в первом раунде звезды: одна нужная вещь сама тянется к ребёнку */
-      if(CUR_STAR===2&&idx===0&&worn===0&&!drag){var T=tiles.filter(function(t){return t.ok&&!t.done})[0];var p0={x:T.cx,y:T.cy};anim(1.4,function(u){if(T.done||(drag&&drag.T===T)||T.hintStop){T.hintStop=true;return}var s=Math.sin(Math.PI*u)*.45;T.cx=lerp(p0.x,768,s);T.cy=lerp(p0.y,600,s);placeTile(T)},function(){if(T.hintStop||T.done)return;T.cx=p0.x;T.cy=p0.y;placeTile(T)})}})})});
+      if(CUR_STAR===2&&idx===0&&worn===0&&!drag){var T=tiles.filter(function(t){return t.ok&&!t.done})[0];var p0={x:T.cx,y:T.cy};anim(1.4,function(u){if(T.done||(drag&&drag.T===T)||T.hintStop){T.hintStop=true;return}var s=Math.sin(Math.PI*u)*.45;T.cx=lerp(p0.x,768,s);T.cy=lerp(p0.y,600,s);placeTile(T)},function(){if(T.hintStop||T.done)return;T.cx=p0.x;T.cy=p0.y;placeTile(T)})}})})})});
   function makeTile(key,pos,parent,Kref,ok){var it=ITEMS[key],T={key:key,it:it,ok:ok,home:{x:pos[0],y:pos[1]},cx:pos[0],cy:pos[1],s:1};
     T.plate=el("rect",{x:pos[0]-116,y:pos[1]-228,width:232,height:236,fill:"#000",opacity:0},parent);
     T.g=el("g",{style:"cursor:grab"},parent);T.inner=el("g",{},T.g);if(it.icon)it.icon(T.inner);else drawItem(it,null,T.inner);
@@ -1356,7 +1356,7 @@ function round1(R,idx,cb,fadeIn){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),o=b
         T.g.remove();drawItem(T.it,K,null);if(T.it.onWear)T.it.onWear(K);play(DRESS_SND);anim(.3,function(u){K.sq=Math.sin(Math.PI*u)*.025});worn++;
         if(worn>=need)later(.6,finish);else canDrag=true})}
     else{var x0=T.cx,y0=T.cy;anim(.2,function(u){var e=eio(u);T.cx=lerp(x0,T.home.x,e);T.cy=lerp(y0,T.home.y,e);T.s=lerp(T.s0*1.08,T.s0,e);placeTile(T)})}};
-  function finish(){sndVol(amb,ambV,1.0);var cb0=cb;cb=function(){G2.prevAmb=amb;cb0()};anim(1.8,function(u){var e=eio(u);CAM=[lerp(0,77,e),lerp(0,51,e),lerp(1536,1382,e),lerp(1024,921,e)]},null,.3);bgBlur(false);ticks.push(o.tick);anim(.6,function(u){VE.setAttribute("opacity",(.4*(1-eio(u))).toFixed(3));TL.setAttribute("opacity",(1-eio(u)).toFixed(2))});
+  function finish(){var aa=AUD[amb];if(aa&&aa.paused){play(amb,ambV*.35);try{aa.loop=true}catch(e){}}sndVol(amb,ambV,1.0);var cb0=cb;cb=function(){G2.prevAmb=amb;cb0()};anim(1.8,function(u){var e=eio(u);CAM=[lerp(0,77,e),lerp(0,51,e),lerp(1536,1382,e),lerp(1024,921,e)]},null,.3);bgBlur(false);ticks.push(o.tick);anim(.6,function(u){VE.setAttribute("opacity",(.4*(1-eio(u))).toFixed(3));TL.setAttribute("opacity",(1-eio(u)).toFixed(2))});
     later(.5,function(){CARTOONS[R.cartoon]?CARTOONS[R.cartoon](K,o,{g:g},cb):R.cartoon==="bubbles"?cartoonBubbles():R.cartoon==="puddle"?cartoonPuddle():R.cartoon==="snowball"?snowballCartoon(K,o,FX,cb):leavesCartoon(K,o,FX,cb)})}
   function cartoonBubbles(){var A1=K.arms[1],P1=K.pose[1],tmp={x:50,a:0,b:0};g.appendChild(o.bubL);
     /* палочка для пузырей в правой руке, колечко у рта */
@@ -1390,7 +1390,7 @@ function starDone(slot,cb){play("star");launchFireworks();BIG.style.display="blo
   var dx=br.left+br.width/2-(gr.left+gr.width/2),dy=br.top+br.height/2-(gr.top+gr.height/2),bw=BIG.offsetWidth||150,ts=br.width/(bw||150)*.9;
   anim(.45,function(u){BIG.style.transform="translate(-50%,-50%) scale("+back(u).toFixed(3)+")"},function(){
     anim(.7,function(u){var e=eio(u);BIG.style.transform="translate(calc(-50% + "+(dx*e).toFixed(1)+"px),calc(-50% + "+(dy*e).toFixed(1)+"px)) scale("+lerp(1,ts,e).toFixed(3)+")"},function(){
-      BIG.style.display="none";starBacks[slot].classList.add("sg-earned");starBacks[slot].classList.remove("sg-pulse");void starBacks[slot].offsetWidth;starBacks[slot].classList.add("sg-pulse");if(cb)later(1.6,cb)},.3)})}
+      BIG.style.display="none";starBacks[slot].classList.add("sg-earned");starBacks[slot].classList.remove("sg-pulse");void starBacks[slot].offsetWidth;starBacks[slot].classList.add("sg-pulse");if(cb)later(.8,cb)},.3)})}
 var fwC=document.getElementById("sg-fireworks"),c2d=fwC.getContext("2d"),fwP=[],fwRun=false,fwRaf=null;
 function launchFireworks(){fwC.width=GAME.offsetWidth;fwC.height=GAME.offsetHeight;fwP=[];fwRun=true;spawnBurst();spawnBurst();if(!fwRaf)fwLoop();setTimeout(function(){fwRun=false},1500)}
 function spawnBurst(){var x=.2+Math.random()*.6,y=.1+Math.random()*.5,cols=["#6DCC0B","#F97A4F","#FED224","#E4615C","#6B91D6","#FC88A7"],col=cols[Math.floor(Math.random()*cols.length)];

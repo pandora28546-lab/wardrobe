@@ -13,7 +13,15 @@ function prepare(keepStars){reset(keepStars);
     /* до старта звезды стоит тот же фон, что будет в раунде, и с той же камерой — без скачка */
     var o=bgFor(STARS[CUR_STAR][START_R],START_R),bgG=el("g",{},BGROOT);bgG.appendChild(o.g);ticks.push(o.tick);CAM=[77,51,1382,921];G2.prev={g:el("g",{},ROOT),bg:bgG};G2.instant=true;earnedBefore()}}
 /* смена звезды без пустого экрана и без копий сцены: пока строится следующая звезда, на экране стоит последний кадр, затем сразу новая сцена */
-function goStar(n){setTimeout(function(){mode="star";CUR_STAR=n;START_R=0;prepare(true);later(.6,runStar2)},0)}
+function goStar(n){setTimeout(function(){
+  /* смена звезды так же, как смена раунда: последний кадр уходит в отдельную группу (пересчитанную под камеру нового раунда),
+     новая звезда строится под ней, старая плавно гаснет сверху. Сцену не копируем — те же элементы просто переносим. */
+  var c=CAM.slice(),N=[77,51,1382,921],k=N[2]/c[2],tr="translate("+f1(N[0]-c[0]*k)+" "+f1(N[1]-c[1]*k)+") scale("+k.toFixed(4)+")";
+  var oG=el("g",{transform:tr}),oB=el("g",{transform:tr});while(ROOT.firstChild)oG.appendChild(ROOT.firstChild);while(BGROOT.firstChild)oB.appendChild(BGROOT.firstChild);FX.innerHTML="";
+  tok++;tw=[];ticks=[];kids=[];splashes=[];camFn=null;drag=null;musicHold(true);
+  Object.keys(AUD).forEach(function(q){if(q!=="star"&&q!=="fanfare")try{AUD[q].pause()}catch(e){}});Object.keys(VOICE).forEach(function(q){try{VOICE[q].pause()}catch(e){}});
+  ROOT.appendChild(oG);BGROOT.appendChild(oB);G2={prev:{g:oG,bg:oB}};CAM=N.slice();
+  mode="star";CUR_STAR=n;START_R=0;setScript(starScript());earnedBefore();runStar2()},0)}
 function afterStar(){if(mode==="intro"){goStar(2);return}if(CUR_STAR<4){goStar(CUR_STAR+1);return}
   play("fanfare");launchFireworks();showEnd()}
 function showEnd(){setTimeout(function(){$id("sg-end-overlay").classList.add("sg-show")},1500)}
