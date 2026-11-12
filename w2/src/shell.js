@@ -46,7 +46,10 @@ function grab(u,ok,bad){fetch(u).then(function(r){if(!r.ok)throw 0;return r.blob
   var im=new Image();im.onload=im.onerror=tickLoad;im.src=A.star})();
 function onLoaded(){$id("sg-loading").style.display="none";loadedReady=true;if(isPhone())syncMobileUI();else $id("sg-start-overlay").style.display="flex"}
 /* вступление уже построено при загрузке — по «Начать» не перестраиваем, только пауза 0,6 с */
-$id("sg-start-btn").addEventListener("click",function(){$id("sg-start-overlay").style.display="none";unlock();started=true;syncMobileUI();later(.6,runIntro)});
+$id("sg-start-btn").addEventListener("click",function(){$id("sg-start-overlay").style.display="none";unlock();
+  /* сразу останавливаем всё, что разблокировали (раньше это делала перестройка сцены) — иначе на iPad звучит всё разом */
+  Object.keys(AUD).map(function(k){return AUD[k]}).concat(PRA).concat(Object.keys(VOICE).map(function(k){return VOICE[k]})).forEach(function(a){try{a.pause();a.currentTime=0}catch(e){}});
+  started=true;syncMobileUI();later(.6,runIntro)});
 
 /* ─── полноэкранный режим и поворот телефона (как в первой игре «Гардероб») ─── */
 var game=GAME,fsWrap=$id("sg-fs-wrap"),rotEl=$id("sg-rotate"),canRealFS=!!(fsWrap.requestFullscreen||fsWrap.webkitRequestFullscreen),pseudoFS=false;
