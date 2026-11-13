@@ -495,7 +495,7 @@ function poseKid(K,t){var br=Math.sin(t*2.2)*.006;
   K.head.setAttribute("transform","translate(0 -386) rotate("+f1(K.p.tilt||0)+")");
   setArm(K,-1);setArm(K,1);
   K.shadow.setAttribute("cx",f1(K.x));K.shadow.setAttribute("cy",f1(K.gy+4));var k=1-Math.min(.45,K.hop/260);K.shadow.setAttribute("rx",f1(80*K.gs*k));K.shadow.setAttribute("ry",f1(10*K.gs/1.3));
-  K.root.setAttribute("opacity",K.op.toFixed(2));K.shadow.setAttribute("opacity",(.13*k*K.op).toFixed(3));
+  var kop=K.op.toFixed(2);if(K.lastOp!==kop){K.lastOp=kop;K.root.setAttribute("opacity",kop)}K.shadow.setAttribute("opacity",(.13*k*K.op).toFixed(3));
   if(K.cast){K.cast.on=!K.castOff;K.cast.sync()}}
 
 /* ───────── одежда (вид спереди): основной цвет + тёмный цвет деталей, как в первой игре ───────── */
@@ -846,7 +846,7 @@ function cartKitchen(K,o,C,cb){/* режет огурец на доске: ле�
   /* руки к доске */var la=L.a,lb=L.b,ra=R.a,rb=R.b;setL();var La=L.a,Lb=L.b;setR(bx(888),by(670));var Ra=R.a,Rb=R.b;
   anim(.5,function(u){var e=eio(u);L.a=lerp(la,La,e);L.b=lerp(lb,Lb,e);R.a=lerp(ra,Ra,e);R.b=lerp(rb,Rb,e);knife.setAttribute("opacity",Math.min(1,u*3).toFixed(2));knife.setAttribute("transform","rotate("+f1(-(R.a+R.b))+")")},function(){
     var xs=[850,826,802,778,754,730],i=0;
-    (function chop(){if(i>=xs.length){K.p.happy=true;anim(.4,function(u){setR(bx(888),by(lerp(676,640,u)))});later(.7,cb);return}var x=xs[i++];
+    (function chop(){if(i>=xs.length){K.p.happy=true;later(.7,cb);return}var x=xs[i++];
       anim(.14,function(u){setR(bx(lerp(x+20,x,u)),by(670))},function(){anim(.14,function(u){setR(bx(x),by(lerp(670,694,eio(u))))},function(){play("chop",.55);
         cuc.setAttribute("width",f1(x-648));drawDots(x);var c=el("g",{transform:"translate("+(893+i*7)+" "+(755-i*1.5)+")"},sl);el("ellipse",{rx:13,ry:11,fill:"#4D9E10"},c);el("ellipse",{rx:9.5,ry:8,fill:"#CBF0A4"},c);[[-3,-2],[3,-2],[0,3]].forEach(function(q){el("circle",{cx:q[0],cy:q[1],r:1.6,fill:"#B6D58C"},c)});
         anim(.2,function(u){setR(bx(x),by(lerp(694,670,eio(u))))},chop)})})})()})}
@@ -854,7 +854,7 @@ function cartKitchen(K,o,C,cb){/* режет огурец на доске: ле�
 function cartBike(K,o,C,cb){/* подходит к велосипеду слева, садится и уезжает через весь кадр направо, звенит звонок */
   var PX=o.bikeX,holder=el("g",{opacity:0},C.g),bo={};buildRider(holder,bo);bo.later();bo.x=PX;bo.wa=0;bo.ca=0;bo.ring=0;bo.tick=function(){};poseS4(bo,clock);
   var x0=K.x;anim(1.0,function(u){K.x=lerp(x0,PX+90,eio(u));K.hop=Math.abs(Math.sin(u*Math.PI*3))*7},function(){K.hop=0;
-    anim(.4,function(u){var e=eio(u);holder.setAttribute("opacity",e.toFixed(2));K.op=1-e;o.parked.setAttribute("opacity",(1-e).toFixed(2))});
+    anim(.4,function(u){var e=eio(u);holder.setAttribute("opacity",e.toFixed(2));K.op=1-e;o.parked.setAttribute("opacity",(1-e).toFixed(2))},function(){K.castOff=true;K.root.setAttribute("display","none");K.shadow.setAttribute("display","none");o.parked.setAttribute("display","none")});
     var lastX=bo.x,live=function(t){var dx=bo.x-lastX;lastX=bo.x;bo.wa+=dx/(86*1.35);bo.ca+=dx/(86*1.35)*.55;poseS4(bo,t)};ticks.push(live);
     later(.7,function(){anim(4.0,function(u){var e=u<.25?u*u/.4375:(u-.125)/.875;bo.x=lerp(PX,1960,e)},function(){ticks=ticks.filter(function(f){return f!==live})});later(2.6,cb);
       later(1.6,function(){play("bell",.55);anim(.25,function(u){bo.ring=Math.sin(Math.PI*u)});anim(.25,function(u){bo.ring=Math.sin(Math.PI*u)},function(){bo.ring=0;bo.happy=true},.25)})})})}
@@ -1099,6 +1099,7 @@ function praise(){if(!soundOn)return null;var L=praiseList();if(!L.length)return
 function cuePraise(){var L=praiseList();if(!L.length||busy(SV)||SV.__u===SILENT_WAV)return;PRAISE_NEXT=L[Math.floor(Math.random()*L.length)];setSrc(SV,PRAISE_NEXT);SV.__k="praise"}
 function cueAfter(i){if(mode!=="intro"&&i%2===1){cuePraise();return}var n=SCRIPT[i+1];if(n)cueVoice(n.v)}
 var CART_SND={gym:["clank"],party:["blow"],pool:["splash1"],sleep:["dress","click"],kitchen:["chop"],bike:["bell"],garden:["pop"],football:["kick"],bubbles:["bubbles"],puddle:["splash"],snowball:["snowball"],leaves:["leaves"]};
+function cueAmb(k){var u=SU[k],i;if(!u)return;for(i=0;i<SA.length;i++)if(SA[i].__k===k)return;for(i=0;i<SA.length;i++){var a=SA[i];if(!busy(a)&&a.__u!==SILENT_WAV){setSrc(a,u);a.__k=k;return}}}
 function cueSnd(list){list.forEach(function(k){var u=SU[k],i;if(!u)return;for(i=0;i<SF.length;i++)if(SF[i].__k===k)return;
   for(i=0;i<SF.length;i++){var a=SF[i];if(!busy(a)&&a.__u!==SILENT_WAV&&list.indexOf(a.__k)<0){setSrc(a,u);a.__k=k;a.__t=0;return}}})}
 function sndVol(k,v,d){var a=elFor(k);if(!a)return;var g=a.__g,v0=a.volume;anim(d,function(u){if(a.__g===g)try{a.volume=lerp(v0,v,u)}catch(e){}})}
@@ -1134,7 +1135,7 @@ function say(i,cb){hl(i);var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);la
 /* ───────── камера ───────── */
 var CAM=[0,0,1536,1024],camFn=null;
 var BGSVG=document.getElementById("sg-bg"),BGROOT=null;
-function applyCam(){var v=CAM.map(f1).join(" ");SVG.setAttribute("viewBox",v);BGSVG.setAttribute("viewBox",v)}
+var camV="";function applyCam(){var v=CAM.map(f1).join(" ");if(v===camV)return;camV=v;SVG.setAttribute("viewBox",v);BGSVG.setAttribute("viewBox",v)}
 function bgBlur(on){BGSVG.style.filter=on?"blur("+Math.max(4,Math.round(GAME.offsetWidth*.009))+"px)":"none"}
 function panTo(c,d,cb){var c0=CAM.slice();camFn=null;anim(d,function(u){var e=eio(u);CAM=c0.map(function(v,i){return lerp(v,c[i],e)})},cb)}
 
@@ -1225,7 +1226,7 @@ function runS2(o,cb){o.x=420;o.uRot=-112;o.open=0;o.hold=null;var X0=420,X1=980,
     later(1.3,function(){walk(X1,X2,2.6,function(){later(.6,function(){ticks=ticks.filter(function(f){return f!==o.live});cb()})})})});
   /* дождь начинается, пока она идёт */
   anim(1.0,function(u){o.rainOn=u;o.dark.setAttribute("opacity",(.05+.2*u).toFixed(3))},null,1.2);later(1.2,function(){var a=play("rain",0);if(a){var g=a.__g;anim(1.0,function(u){if(a.__g===g)try{a.volume=u*.4}catch(e){}})}});
-  later(2.0,function(){say(1)})}
+  later(2.0,function(){cueSnd(["steps","umbrella","dress","click"]);say(1)})}
 
 /* 3. Сон: спереди, камера стоит */
 function buildS3(g){var o=bedroom();shadeAll(o.g);g.appendChild(o.g);
@@ -1235,7 +1236,7 @@ function runS3(o,cb){var K=o.K;camFn=null;
   o.live=function(t){poseKid(K,t)};ticks.push(o.live);
   /* зевает и потягивается */
   anim(1.2,function(u){var s=Math.sin(Math.PI*u);K.p.yawn=s;K.pose[-1].a=lerp(10,150,s);K.pose[1].a=lerp(-10,-150,s);K.pose[-1].b=lerp(0,30,s);K.pose[1].b=lerp(0,-30,s);K.p.tilt=s*-4},null,1.4);
-  later(1.8,function(){say(2)});
+  later(1.8,function(){cueSnd(["steps","dress","click","bell"]);say(2)});
   /* прыгает в кровать: голова на подушку, одеяло спереди закрывает пижаму */
   var bx=1120,by=1060;
   later(3.2,function(){var xw=K.x;play("steps",.35);
@@ -1319,7 +1320,7 @@ function buildIntro(){SC=[];S1=scene(buildS1,1536);S2=scene(buildS2,S2W);S3=scen
 function dissolve(A,B,N,cb){var c=CAM.slice(),k=N[2]/c[2];show(B);ROOT.appendChild(A.g);
   A.g.setAttribute("transform","translate("+f1(N[0]-c[0]*k+A.x0*k)+" "+f1(N[1]-c[1]*k)+") scale("+k.toFixed(4)+")");camFn=null;CAM=N.slice();
   anim(.8,function(u){A.g.setAttribute("opacity",(1-eio(u)).toFixed(2))},function(){hide(A);A.g.removeAttribute("opacity");A.g.setAttribute("transform","translate("+A.x0+" 0)");if(cb)cb()})}
-function runIntro(){show(S1);
+function runIntro(){show(S1);cueSnd(["steps","umbrella"]);cueAmb("rain");
   runS1(S1,function(){S2.x=420;S2.uRot=-112;S2.open=0;S2.hold=null;S2.walk=0;poseS2(S2,clock);
     dissolve(S1,S2,[S2.x0,0,1536,1024],function(){runS2(S2,function(){fadeSnd("rain",1.2);poseKid(S3.K,clock);
       dissolve(S2,S3,[S3.x0,0,1536,1024],function(){runS3(S3,function(){S4.x=300;S4.wa=0;S4.ca=0;poseS4(S4,clock);
@@ -1394,7 +1395,7 @@ function round1(R,idx,cb,fadeIn,qd){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),
         T.g.remove();drawItem(T.it,K,null);if(T.it.onWear)T.it.onWear(K);play(DRESS_SND);anim(.3,function(u){K.sq=Math.sin(Math.PI*u)*.025});worn++;
         if(worn>=need)later(.6,finish);else canDrag=true})}
     else{var x0=T.cx,y0=T.cy;anim(.2,function(u){var e=eio(u);T.cx=lerp(x0,T.home.x,e);T.cy=lerp(y0,T.home.y,e);T.s=lerp(T.s0*1.08,T.s0,e);placeTile(T)})}};
-  function finish(){if(!elFor(amb))play(amb,ambV*.35);sndVol(amb,ambV,1.0);var cb0=cb;cb=function(){fadeSnd(amb,1.5);G2.prevAmb=null;cb0()};anim(1.8,function(u){var e=eio(u);CAM=[lerp(0,77,e),lerp(0,51,e),lerp(1536,1382,e),lerp(1024,921,e)]},null,.3);bgBlur(false);ticks.push(o.tick);anim(.6,function(u){VE.setAttribute("opacity",(.4*(1-eio(u))).toFixed(3));TL.setAttribute("opacity",(1-eio(u)).toFixed(2))});
+  function finish(){if(!elFor(amb))play(amb,ambV*.35);sndVol(amb,ambV,1.0);var cb0=cb;cb=function(){fadeSnd(amb,1.5);G2.prevAmb=null;cb0()};anim(1.8,function(u){var e=eio(u);CAM=[lerp(0,77,e),lerp(0,51,e),lerp(1536,1382,e),lerp(1024,921,e)]},null,.3);bgBlur(false);if(R.bg!=="bike")ticks.push(o.tick);/* в велосипеде фон стоит, как во время одевания: облака и солнце не перерисовывают весь фон каждый кадр */anim(.6,function(u){VE.setAttribute("opacity",(.4*(1-eio(u))).toFixed(3));TL.setAttribute("opacity",(1-eio(u)).toFixed(2))},function(){VE.setAttribute("display","none");TL.setAttribute("display","none")});
     later(.5,function(){CARTOONS[R.cartoon]?CARTOONS[R.cartoon](K,o,{g:g},cb):R.cartoon==="bubbles"?cartoonBubbles():R.cartoon==="puddle"?cartoonPuddle():R.cartoon==="snowball"?snowballCartoon(K,o,FX,cb):leavesCartoon(K,o,FX,cb)})}
   function cartoonBubbles(){var A1=K.arms[1],P1=K.pose[1],tmp={x:50,a:0,b:0};g.appendChild(o.bubL);
     /* палочка для пузырей в правой руке, колечко у рта */
@@ -1411,8 +1412,8 @@ function round1(R,idx,cb,fadeIn,qd){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),
       emit=true;K.p.blow=true;play("bubbles",.5);later(3.0,function(){play("bubbles",.5)});anim(5.6,function(u){K.p.tilt=Math.sin(u*Math.PI*5)*2},function(){emit=false;K.p.blow=false;K.p.happy=true;
         anim(.5,function(u){var e=eio(u);P1.a=lerp(tmp.a,-10,e);P1.b=lerp(tmp.b,0,e)},function(){W.remove();W.done=true;later(.5,cb)})})})}
   function cartoonPuddle(){var x0=K.x,x1=920,L=K.pose[-1],LT=[0,.5,1.15,1.8],t0=clock,tt=0,land=0,go=false,a=play("splash",.4);
-    /* ждём начала звука (не дольше 0,3 с), дальше прыжки идут по часам игры — плавно, без подстройки под звук на лету */
-    var live=function(){if(!go){var at=(a&&a.__k==="splash"&&!a.paused)?a.currentTime:0;if(at>0){go=true;t0=clock-at}else if(clock-t0>.3){go=true;t0=clock}else return}tt=clock-t0;
+    /* ждём начала звука (не дольше 0,3 с); дальше прыжки идут по часам игры и плавно подтягиваются к звуку — без остановок */
+    var live=function(t,dt){var at=(a&&a.__k==="splash"&&!a.paused)?a.currentTime:0;if(!go){if(at>0){go=true;tt=at}else if(clock-t0>.3){go=true;tt=0}else return}else tt+=(dt||0)*(1+(at>0?clamp((at-tt)*4,-.5,.5):0));
       if(tt>=1.8){if(land<3){land=3;splash(K.x,950,.9);anim(.18,function(u){K.sq=Math.sin(Math.PI*u)*.06})}K.hop=0;L.a=10;ticks=ticks.filter(function(f){return f!==live});K.p.happy=true;later(.5,cb);return}
       var j=tt<.5?0:tt<1.15?1:2,u=(tt-LT[j])/(LT[j+1]-LT[j]);if(j>land){land=j;splash(K.x,950,.9);anim(.18,function(v){K.sq=Math.sin(Math.PI*v)*.06})}
       if(j===0)K.x=lerp(x0,x1,eio(u));K.hop=Math.sin(Math.PI*u)*(j===0?120:80);L.a=lerp(10,j===0?60:50,Math.sin(Math.PI*u))};

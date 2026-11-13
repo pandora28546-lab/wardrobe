@@ -92,5 +92,5 @@ function frame(now){var dt=Math.min(.034,(now-last)/1000);last=now;step(dt,start
 function step(dt,run){if(run){clock+=dt;stepTw()}if(camFn)camFn();applyCam();ticks.forEach(function(f){f(clock,run?dt:0)});kids.forEach(function(K){poseKid(K,clock)});drawSplash(dt)}
 requestAnimationFrame(frame);
 /* для проверки в консоли: __sg.star(n) — сразу к звезде n (2–4), __sg.ff(сек) — промотать время */
-window.__sg={star:function(n){mode="star";CUR_STAR=n;START_R=0;started=true;prepare(true);later(.6,runStar2)},ff:function(sec){var n=Math.round(sec/.03);for(var i=0;i<n;i++)step(.03,true)},G2:function(){return G2}};
+window.__sg={star:function(n){mode="star";CUR_STAR=n;START_R=0;started=true;prepare(true);later(.6,runStar2)},round:function(n,r){mode="star";CUR_STAR=n;START_R=r;started=true;prepare(true);later(.6,runStar2)},ff:function(sec){var n=Math.round(sec/.03);for(var i=0;i<n;i++)step(.03,true)},G2:function(){return G2}};
 })();
