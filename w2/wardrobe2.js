@@ -1255,12 +1255,14 @@ function runStar2(){earnedBefore();var L=STARS[CUR_STAR],i=START_R;(function nex
 function bgFor(R,idx){seed=100+idx+CUR_STAR*10;var b=R.bg;
   return shadeAll(b==="sun"?makeStreet(1536,"playground",[]):b==="rain"?makeStreet(1536,"yard",[[930,950,150],[300,962,70],[1330,940,64]]):b==="winter"?makeWinter():b==="autumn"?makeAutumn():
     b==="gym"?bgGym():b==="party"?bgParty():b==="pool"?bgPool2():b==="bedroom"?bgBedroom():b==="kitchen"?bgKitchen():b==="bike"?bgBike():b==="garden"?bgGarden():bgField())}
-function round(R,idx,cb){if(G2.prev&&!G2.instant){var p=G2.prev;G2.prev=null;round1(R,idx,cb,false,.55);
+function round(R,idx,cb){if(G2.prev&&!G2.instant){var p=G2.prev;G2.prev=null;
+    /* на время смены раунда оба фона стоят: старый замирает сразу, новый оживает после растворения (дождь и снег перерисовывают весь фон каждый кадр) */
+    if(p.o)ticks=ticks.filter(function(f){return f!==p.o.tick});round1(R,idx,cb,false,.55);
     ROOT.appendChild(p.g);if(p.bg)BGROOT.appendChild(p.bg);
     anim(.5,function(u){var v=(1-eio(u)).toFixed(2);p.g.setAttribute("opacity",v);if(p.bg)p.bg.setAttribute("opacity",v)},function(){p.g.remove();if(p.bg)p.bg.remove();if(p.o)ticks=ticks.filter(function(f){return f!==p.o.tick})});return}
   round1(R,idx,cb,false)}
 function round1(R,idx,cb,fadeIn,qd){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),o=bgFor(R,idx);bgG.appendChild(o.g);
-  ticks.push(o.tick);camFn=null;CAM=[77,51,1382,921];anim(3.2,function(u){var e=eio(u);CAM=[lerp(77,0,e),lerp(51,0,e),lerp(1382,1536,e),lerp(921,1024,e)]});
+  if(qd!=null){o.tick(clock,0);later(.5,function(){ticks.push(o.tick)})}else ticks.push(o.tick);camFn=null;CAM=[77,51,1382,921];anim(3.2,function(u){var e=eio(u);CAM=[lerp(77,0,e),lerp(51,0,e),lerp(1382,1536,e),lerp(921,1024,e)]});
   var VE=el("rect",{x:-10,y:-10,width:1556,height:1044,fill:"#EAF1FF",opacity:0},bgG),KL=el("g",{},g),TL=el("g",{},g),DL=el("g",{},g);
   var cur={g:g,bg:bgG,o:o};if(G2.prev&&G2.instant){G2.prev.g.remove();if(G2.prev.bg)G2.prev.bg.remove();G2.instant=false}if(fadeIn){g.setAttribute("opacity",0);bgG.setAttribute("opacity",0);anim(.5,function(u){var v=eio(u).toFixed(2);g.setAttribute("opacity",v);bgG.setAttribute("opacity",v)})}G2.prev=cur;
   /* спрей для мультика «жарко» — стоит на газоне */
