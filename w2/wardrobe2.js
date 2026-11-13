@@ -981,7 +981,9 @@ var PRA=[];
 function buildAudio(){Object.keys(A.snd).forEach(function(k){var a=new Audio();a.preload="auto";a.src=srcFor(A.snd[k]);AUD[k]=a});
   PRAISE.forEach(function(u){var a=new Audio();a.preload="auto";a.src=srcFor(u);PRA.push(a)});buildVoice()}
 function praise(){if(!soundOn||!PRA.length)return;var a=PRA[Math.floor(Math.random()*PRA.length)];try{a.currentTime=0}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){})}
-function unlock(){Object.keys(AUD).map(function(k){return AUD[k]}).concat(PRA).concat(Object.keys(VOICE).map(function(k){return VOICE[k]})).forEach(function(a){a.muted=true;var p=a.play();if(p&&p.then)p.then(function(){a.pause();a.currentTime=0;a.muted=false}).catch(function(){a.muted=false});else a.muted=false})}
+var SILENT_WAV="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
+function unlock(){Object.keys(AUD).map(function(k){return AUD[k]}).concat(PRA).concat(Object.keys(VOICE).map(function(k){return VOICE[k]})).forEach(function(a){var real=a.src;if(!real)return;
+  var back=function(){try{a.pause();a.src=real;a.currentTime=0}catch(e){}};try{a.src=SILENT_WAV;var p=a.play();if(p&&p.then)p.then(back,back);else back()}catch(e){back()}})}
 var musicOn=false,musicHeld=true,DRESS_SND="dr2";
 function musicHold(h){musicHeld=h;var a=AUD.music;if(!a)return;try{if(h||!musicOn)a.pause();else{a.loop=true;a.volume=1;var p=a.play();if(p&&p.catch)p.catch(function(){})}}catch(e){}}
 function play(k,vol){if(!soundOn)return;var a=k==="pym"?PYMS[pymI++%3]:AUD[k];if(!a)return;try{a.pause();a.currentTime=0;a.volume=vol==null?1:vol}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){})}
