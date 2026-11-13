@@ -4,7 +4,7 @@ function $id(i){return document.getElementById(i)}
 function mark(){}
 var mode="intro",started=false,loadedReady=false,STAGE=$id("sg-stage");
 function reset(keepStars){tok++;tw=[];ticks=[];kids=[];splashes=[];ROOT.innerHTML="";FX.innerHTML="";BGROOT.innerHTML="";bgBlur(false);musicHold(true);drag=null;G2={};camFn=null;CAM=[0,0,1536,1024];
-  stopAll(true);
+  stopAll(true);purgeDefs();
   if(!keepStars)starBacks.forEach(function(b){b.classList.remove("sg-earned","sg-pulse")});BIG.style.display="none"}
 function prepare(keepStars){reset(keepStars);
   if(mode==="intro"){setScript(INTRO_SCRIPT);buildIntro();show(S1);
@@ -92,5 +92,5 @@ function frame(now){var dt=Math.min(.034,(now-last)/1000);last=now;step(dt,start
 function step(dt,run){if(run){clock+=dt;stepTw()}if(camFn)camFn();applyCam();ticks.forEach(function(f){f(clock,run?dt:0)});kids.forEach(function(K){poseKid(K,clock)});drawSplash(dt)}
 requestAnimationFrame(frame);
 /* для проверки в консоли: __sg.star(n) — сразу к звезде n (2–4), __sg.ff(сек) — промотать время */
-window.__sg={star:function(n){mode="star";CUR_STAR=n;START_R=0;started=true;prepare(true);later(.6,runStar2)},round:function(n,r){mode="star";CUR_STAR=n;START_R=r;started=true;prepare(true);later(.6,runStar2)},ff:function(sec){var n=Math.round(sec/.03);for(var i=0;i<n;i++)step(.03,true)},G2:function(){return G2}};
+window.__sg={star:function(n){mode="star";CUR_STAR=n;START_R=0;started=true;prepare(true);later(.6,runStar2)},info:function(){return {defs:DEFS.children.length,ticks:ticks.length,tw:tw.length,spl:splashes.length,kids:kids.length,nodes:document.getElementsByTagName("*").length}},round:function(n,r){mode="star";CUR_STAR=n;START_R=r;started=true;prepare(true);later(.6,runStar2)},ff:function(sec){var n=Math.round(sec/.03);for(var i=0;i<n;i++)step(.03,true)},G2:function(){return G2}};
 })();

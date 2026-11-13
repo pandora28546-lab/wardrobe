@@ -119,7 +119,9 @@ function lune(p,cx,cy,r,k,col,op){var dx=-k,dy=-k*.9,d=Math.hypot(dx,dy);if(d>=2
 var BGID=0;
 /* форма со скруглённой обводкой обрезается маской (она учитывает обводку), остальные — clip-path */
 function shadeEl(src,k,col,op){var par=src.parentNode,id="bgc"+(BGID++),st=src.getAttribute("stroke"),c=src.cloneNode(false),g;c.removeAttribute("opacity");c.removeAttribute("id");
-  if(st){var m=el("mask",{id:id,maskUnits:"userSpaceOnUse",x:-3000,y:-3000,width:6000,height:6000},DEFS);c.setAttribute("fill","#FFFFFF");c.setAttribute("stroke","#FFFFFF");m.appendChild(c);g=el("g",{mask:"url(#"+id+")"})}
+  /* область маски — только вокруг самой формы: маска на весь экран (6000×6000) каждый кадр считалась заново целиком и тормозила фон */
+  if(st){var mb=src.getAttribute("transform")?null:boxOf(src),sw=+(src.getAttribute("stroke-width")||1),pad=sw/2+k+4;
+    var m=el("mask",mb?{id:id,maskUnits:"userSpaceOnUse",x:f1(mb.x-pad),y:f1(mb.y-pad),width:f1(mb.w+2*pad),height:f1(mb.h+2*pad)}:{id:id,maskUnits:"userSpaceOnUse",x:-3000,y:-3000,width:6000,height:6000},DEFS);c.setAttribute("fill","#FFFFFF");c.setAttribute("stroke","#FFFFFF");m.appendChild(c);g=el("g",{mask:"url(#"+id+")"})}
   else{var cp=el("clipPath",{id:id},DEFS);cp.appendChild(c);g=el("g",{"clip-path":"url(#"+id+")"})}
   par.insertBefore(g,src.nextSibling);
   var s1=src.cloneNode(false);s1.removeAttribute("id");s1.setAttribute("fill",col);s1.setAttribute("opacity",op);if(st)s1.setAttribute("stroke",col);g.appendChild(s1);
@@ -129,11 +131,25 @@ function groundOval(g,cx,cy,rx){g.insertBefore(el("ellipse",{cx:cx,cy:cy,rx:rx,r
    Пропускаем: небо, холмы, землю и пол (с зерном или градиентом), большие стены, плоские овалы (лужи, коврики, тени),
    полупрозрачные блики, линии без заливки, мелочь меньше 14 и то, что помечено data-ns. */
 var MEAS=null;
+function boxOf(e){var t=e.tagName,n=function(a){return +(e.getAttribute(a)||0)};
+  if(t==="circle"){var r=n("r");return {x:n("cx")-r,y:n("cy")-r,w:2*r,h:2*r}}
+  if(t==="ellipse")return {x:n("cx")-n("rx"),y:n("cy")-n("ry"),w:2*n("rx"),h:2*n("ry")};
+  if(t==="rect")return {x:n("x"),y:n("y"),w:n("width"),h:n("height")};
+  if(t==="line")return {x:Math.min(n("x1"),n("x2")),y:Math.min(n("y1"),n("y2")),w:Math.abs(n("x2")-n("x1")),h:Math.abs(n("y2")-n("y1"))};
+  if(t!=="path")return null;
+  if(!MEAS){MEAS=document.createElementNS(NS,"svg");MEAS.setAttribute("style","position:absolute;left:-9999px;top:0;width:10px;height:10px;visibility:hidden");document.body.appendChild(MEAS)}
+  var c=el("path",{d:e.getAttribute("d")},MEAS),b=null;try{var q=c.getBBox();b={x:q.x,y:q.y,w:q.width,h:q.height}}catch(x){}c.remove();return b}
 function bboxOf(e){var t=e.tagName;if(t==="circle"){var r=+e.getAttribute("r");return {w:2*r,h:2*r}}
   if(t==="ellipse")return {w:2*e.getAttribute("rx"),h:2*e.getAttribute("ry")};
   if(t==="rect")return {w:+e.getAttribute("width"),h:+e.getAttribute("height")};
   if(!MEAS){MEAS=document.createElementNS(NS,"svg");MEAS.setAttribute("style","position:absolute;left:-9999px;top:0;width:10px;height:10px;visibility:hidden");document.body.appendChild(MEAS)}
   var c=el("path",{d:e.getAttribute("d")},MEAS),b;try{b=c.getBBox()}catch(x){b={width:0,height:0}}c.remove();return {w:b.width,h:b.height}}
+/* тени «стиля 2» и градиенты кладут свои clipPath/mask/градиенты в общий DEFS. Сцены удаляются, а эти записи оставались —
+   к третьему-четвёртому раунду их были тысячи, и каждый кадр браузер перебирал их все. Убираем те, на которые больше никто не ссылается. */
+function purgeDefs(){var used={},re=/url\(#([^)]+)\)/;
+  [].forEach.call(document.querySelectorAll("[clip-path],[mask],[fill^='url'],[stroke^='url'],[filter]"),function(e){["clip-path","mask","fill","stroke","filter"].forEach(function(a){var v=e.getAttribute(a),m=v&&re.exec(v);if(m)used[m[1]]=1})});
+  var seen={};[].slice.call(DEFS.children).reverse().forEach(function(d){var id=d.id;if(!id)return;
+    if(seen[id]||(/^(bgc|s2c|lg)\d+$/.test(id)&&!used[id]))d.remove();else seen[id]=1})}
 function shadeAll(x){if(!BGSH)return x;var root=x.g||x,list=[].slice.call(root.querySelectorAll("circle,ellipse,rect,path"));
   list.forEach(function(e){
     if(e.closest("defs,clipPath,mask,pattern,[data-ns]"))return;
@@ -1259,7 +1275,7 @@ function round(R,idx,cb){if(G2.prev&&!G2.instant){var p=G2.prev;G2.prev=null;
     /* на время смены раунда оба фона стоят: старый замирает сразу, новый оживает после растворения (дождь и снег перерисовывают весь фон каждый кадр) */
     if(p.o)ticks=ticks.filter(function(f){return f!==p.o.tick});round1(R,idx,cb,false,.55);
     ROOT.appendChild(p.g);if(p.bg)BGROOT.appendChild(p.bg);
-    anim(.5,function(u){var v=(1-eio(u)).toFixed(2);p.g.setAttribute("opacity",v);if(p.bg)p.bg.setAttribute("opacity",v)},function(){p.g.remove();if(p.bg)p.bg.remove();if(p.o)ticks=ticks.filter(function(f){return f!==p.o.tick})});return}
+    anim(.5,function(u){var v=(1-eio(u)).toFixed(2);p.g.setAttribute("opacity",v);if(p.bg)p.bg.setAttribute("opacity",v)},function(){p.g.remove();if(p.bg)p.bg.remove();if(p.o)ticks=ticks.filter(function(f){return f!==p.o.tick});purgeDefs()});return}
   round1(R,idx,cb,false)}
 function round1(R,idx,cb,fadeIn,qd){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),o=bgFor(R,idx);bgG.appendChild(o.g);
   if(qd!=null){o.tick(clock,0);later(.5,function(){ticks.push(o.tick)})}else ticks.push(o.tick);camFn=null;CAM=[77,51,1382,921];anim(3.2,function(u){var e=eio(u);CAM=[lerp(77,0,e),lerp(51,0,e),lerp(1382,1536,e),lerp(921,1024,e)]});
@@ -1354,7 +1370,7 @@ function $id(i){return document.getElementById(i)}
 function mark(){}
 var mode="intro",started=false,loadedReady=false,STAGE=$id("sg-stage");
 function reset(keepStars){tok++;tw=[];ticks=[];kids=[];splashes=[];ROOT.innerHTML="";FX.innerHTML="";BGROOT.innerHTML="";bgBlur(false);musicHold(true);drag=null;G2={};camFn=null;CAM=[0,0,1536,1024];
-  stopAll(true);
+  stopAll(true);purgeDefs();
   if(!keepStars)starBacks.forEach(function(b){b.classList.remove("sg-earned","sg-pulse")});BIG.style.display="none"}
 function prepare(keepStars){reset(keepStars);
   if(mode==="intro"){setScript(INTRO_SCRIPT);buildIntro();show(S1);
@@ -1442,5 +1458,5 @@ function frame(now){var dt=Math.min(.034,(now-last)/1000);last=now;step(dt,start
 function step(dt,run){if(run){clock+=dt;stepTw()}if(camFn)camFn();applyCam();ticks.forEach(function(f){f(clock,run?dt:0)});kids.forEach(function(K){poseKid(K,clock)});drawSplash(dt)}
 requestAnimationFrame(frame);
 /* для проверки в консоли: __sg.star(n) — сразу к звезде n (2–4), __sg.ff(сек) — промотать время */
-window.__sg={star:function(n){mode="star";CUR_STAR=n;START_R=0;started=true;prepare(true);later(.6,runStar2)},round:function(n,r){mode="star";CUR_STAR=n;START_R=r;started=true;prepare(true);later(.6,runStar2)},ff:function(sec){var n=Math.round(sec/.03);for(var i=0;i<n;i++)step(.03,true)},G2:function(){return G2}};
+window.__sg={star:function(n){mode="star";CUR_STAR=n;START_R=0;started=true;prepare(true);later(.6,runStar2)},info:function(){return {defs:DEFS.children.length,ticks:ticks.length,tw:tw.length,spl:splashes.length,kids:kids.length,nodes:document.getElementsByTagName("*").length}},round:function(n,r){mode="star";CUR_STAR=n;START_R=r;started=true;prepare(true);later(.6,runStar2)},ff:function(sec){var n=Math.round(sec/.03);for(var i=0;i<n;i++)step(.03,true)},G2:function(){return G2}};
 })();
