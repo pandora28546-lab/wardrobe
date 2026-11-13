@@ -856,7 +856,7 @@ function cartBike(K,o,C,cb){/* подходит к велосипеду слев
   var x0=K.x;anim(1.0,function(u){K.x=lerp(x0,PX+90,eio(u));K.hop=Math.abs(Math.sin(u*Math.PI*3))*7},function(){K.hop=0;
     anim(.4,function(u){var e=eio(u);holder.setAttribute("opacity",e.toFixed(2));K.op=1-e;o.parked.setAttribute("opacity",(1-e).toFixed(2))});
     var lastX=bo.x,live=function(t){var dx=bo.x-lastX;lastX=bo.x;bo.wa+=dx/(86*1.35);bo.ca+=dx/(86*1.35)*.55;poseS4(bo,t)};ticks.push(live);
-    later(.7,function(){anim(4.0,function(u){var e=u<.25?(u/.25)*(u/.25)*.1:.1+(u-.25)/.75*.9;bo.x=lerp(PX,1960,e)},function(){ticks=ticks.filter(function(f){return f!==live})});later(2.6,cb);
+    later(.7,function(){anim(4.0,function(u){var e=u<.25?u*u/.4375:(u-.125)/.875;bo.x=lerp(PX,1960,e)},function(){ticks=ticks.filter(function(f){return f!==live})});later(2.6,cb);
       later(1.6,function(){play("bell",.55);anim(.25,function(u){bo.ring=Math.sin(Math.PI*u)});anim(.25,function(u){bo.ring=Math.sin(Math.PI*u)},function(){bo.ring=0;bo.happy=true},.25)})})})}
 
 function cartGarden(K,o,C,cb){/* подходит к высокой грядке, наклоняется, берёт ботву рукой и выдёргивает морковку — та остаётся в руке */
@@ -1062,12 +1062,12 @@ function sideBlink(H,t,happy){if(t>(H.blinkAt||0)){H.blinkT=t;H.blinkAt=t+rr(2,3
 
 /* ───────── звук: несколько общих плееров, как в «Повелительном наклонении» ─────────
    SV — речь (фразы и похвала), SA — 2 плеера фона (чтобы фоны могли смениться с затуханием),
-   SF — 3 плеера звуков действия, SM — музыка. Все 7 разблокируются одним нажатием «Старт».
+   SF — 4 плеера звуков действия, SM — музыка. Все 8 разблокируются одним нажатием «Старт».
    Звук ищется по ключу: плеер помнит, какой звук в нём стоит (__k), и не перезагружает файл, если он уже стоит. */
 var soundOn=true,SU={},VURL={},VDUR={},PRAISE_U=[];
 var SILENT_WAV="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
 function mkEl(){var a=new Audio();a.preload="auto";a.__k=null;a.__u=null;a.__g=0;a.__t=0;return a}
-var SV=mkEl(),SM=mkEl(),SA=[mkEl(),mkEl()],SF=[mkEl(),mkEl(),mkEl()],SALL=[SV,SM].concat(SA,SF);
+var SV=mkEl(),SM=mkEl(),SA=[mkEl(),mkEl()],SF=[mkEl(),mkEl(),mkEl(),mkEl()],SALL=[SV,SM].concat(SA,SF);
 SV.addEventListener("loadedmetadata",function(){var k=SV.__k;if(k&&k.indexOf("v:")===0&&!VDUR[k.slice(2)]&&isFinite(SV.duration)&&SV.duration>0)VDUR[k.slice(2)]=SV.duration});
 function blobUrl(d){try{var b=atob(d.split(",")[1]),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return URL.createObjectURL(new Blob([a],{type:"audio/mp4"}))}catch(e){return d}}
 function buildAudio(){Object.keys(A.snd).forEach(function(k){if(k!=="pym")SU[k]=blobUrl(A.snd[k])})}
@@ -1091,7 +1091,16 @@ function elFor(k){var L=SA.concat(SF);for(var i=0;i<L.length;i++)if(L[i].__k===k
 var musicOn=false,musicHeld=true,DRESS_SND="dr2";
 function musicHold(h){musicHeld=h;try{if(h||!musicOn||!SU.music)SM.pause();else{setSrc(SM,SU.music);SM.__k="music";SM.loop=true;SM.volume=1;var p=SM.play();if(p&&p.catch)p.catch(function(){})}}catch(e){}}
 function play(k,vol){if(!soundOn)return null;if(k==="praise")return praise();var u=SU[k];if(!u)return null;var am=isAmb(k);return startEl(pick(am?SA:SF,k),k,u,vol,am)}
-function praise(){if(!soundOn)return null;var L=PRAISE_U.length?PRAISE_U:(SU.praise?[SU.praise]:[]);if(!L.length)return null;return startEl(SV,"praise",L[Math.floor(Math.random()*L.length)],1,false)}
+function praiseList(){return PRAISE_U.length?PRAISE_U:(SU.praise?[SU.praise]:[])}
+var PRAISE_NEXT=null;
+function praise(){if(!soundOn)return null;var L=praiseList();if(!L.length)return null;var u=PRAISE_NEXT||L[Math.floor(Math.random()*L.length)];PRAISE_NEXT=null;return startEl(SV,"praise",u,1,false)}
+/* смена файла в плеере на iPad на долю секунды задерживает кадр. Поэтому файлы ставим в плееры заранее, в спокойный момент:
+   звуки раунда — когда звучит задание, похвалу — когда задание договорено, следующую фразу — когда кончилась предыдущая */
+function cuePraise(){var L=praiseList();if(!L.length||busy(SV)||SV.__u===SILENT_WAV)return;PRAISE_NEXT=L[Math.floor(Math.random()*L.length)];setSrc(SV,PRAISE_NEXT);SV.__k="praise"}
+function cueAfter(i){if(mode!=="intro"&&i%2===1){cuePraise();return}var n=SCRIPT[i+1];if(n)cueVoice(n.v)}
+var CART_SND={gym:["clank"],party:["blow"],pool:["splash1"],sleep:["dress","click"],kitchen:["chop"],bike:["bell"],garden:["pop"],football:["kick"],bubbles:["bubbles"],puddle:["splash"],snowball:["snowball"],leaves:["leaves"]};
+function cueSnd(list){list.forEach(function(k){var u=SU[k],i;if(!u)return;for(i=0;i<SF.length;i++)if(SF[i].__k===k)return;
+  for(i=0;i<SF.length;i++){var a=SF[i];if(!busy(a)&&a.__u!==SILENT_WAV&&list.indexOf(a.__k)<0){setSrc(a,u);a.__k=k;a.__t=0;return}}})}
 function sndVol(k,v,d){var a=elFor(k);if(!a)return;var g=a.__g,v0=a.volume;anim(d,function(u){if(a.__g===g)try{a.volume=lerp(v0,v,u)}catch(e){}})}
 function stopSnd(k){var a=elFor(k);if(a)try{a.pause()}catch(e){}}
 function fadeSnd(k,d){var a=elFor(k);if(!a)return;var g=a.__g,v0=a.volume;anim(d,function(u){if(a.__g===g)try{a.volume=Math.max(0,v0*(1-u))}catch(e){}},function(){if(a.__g===g)try{a.pause()}catch(e){}})}
@@ -1120,7 +1129,7 @@ var VBASE="https://cdn.jsdelivr.net/gh/pandora28546-lab/wardrobe@main/",VNAMES=[
 function measureVoice(k){try{fetch(VURL[k]).then(function(r){return r.arrayBuffer()}).then(function(b){var d=mp4Dur(b);if(d)VDUR[k]=d}).catch(function(){})}catch(e){}}
 VNAMES.forEach(function(k){VURL[k]=VBASE+k+".m4a";if(VURL[k])measureVoice(k)});
 var BGV={sun:"zhar",rain:"dozhd",winter:"sneg",autumn:"osen",gym:"sport",party:"prazd",pool:"bass",bedroom:"son",kitchen:"kuh",bike:"vel",garden:"og",field:"fut"};
-function say(i,cb){hl(i);var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);later(d,function(){hl(-1);var n=SCRIPT[i+1];if(n)cueVoice(n.v);if(cb)cb()});return d}
+function say(i,cb){hl(i);var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);later(d,function(){hl(-1);cueAfter(i);if(cb)cb()});return d}
 
 /* ───────── камера ───────── */
 var CAM=[0,0,1536,1024],camFn=null;
@@ -1204,7 +1213,7 @@ function poseS2(o,t){var gs=1.3,x=o.x;o.R.setAttribute("transform","translate("+
   o.canopy.setAttribute("opacity",(o.open||0)<.1?0:1);
   o.head.tail.setAttribute("transform","rotate("+f1(-(Math.sin(t*3)*4+6*w*Math.sin(ph*2)))+" 124 232)");sideBlink(o.head,t,o.happy);
   o.shadow.setAttribute("cx",f1(x));var k=1-Math.min(.45,(o.hop||0)/260);o.shadow.setAttribute("rx",f1(80*gs*k));o.shadow.setAttribute("opacity",(.13*k).toFixed(3));if(o.cast)o.cast.sync()}
-function runS2(o,cb){o.x=420;o.uRot=-112;o.open=0;o.hold=null;var X0=360,X1=980,X2=1700;
+function runS2(o,cb){o.x=420;o.uRot=-112;o.open=0;o.hold=null;var X0=420,X1=980,X2=1700;
   var camOn=function(){var cx=clamp(o.x-1536*.36,0,S2W-1536);CAM=[o.x0+cx,0,1536,1024]};camFn=camOn;
   o.live=function(t,dt){o.tick(t,dt);poseS2(o,t)};ticks.push(o.live);
   function walk(xa,xb,d,cb2){play("steps",.35);anim(d,function(u){var e=u<.85?u/.85*.93:(.93+.07*eout((u-.85)/.15)),w=u<.9?1:Math.max(0,(1-u)/.1);o.x=lerp(xa,xb,e);o.ph=u*d*2*Math.PI/.62;o.walk=w},function(){stopSnd("steps");o.walk=0;if(cb2)cb2()})}
@@ -1311,7 +1320,7 @@ function dissolve(A,B,N,cb){var c=CAM.slice(),k=N[2]/c[2];show(B);ROOT.appendChi
   A.g.setAttribute("transform","translate("+f1(N[0]-c[0]*k+A.x0*k)+" "+f1(N[1]-c[1]*k)+") scale("+k.toFixed(4)+")");camFn=null;CAM=N.slice();
   anim(.8,function(u){A.g.setAttribute("opacity",(1-eio(u)).toFixed(2))},function(){hide(A);A.g.removeAttribute("opacity");A.g.setAttribute("transform","translate("+A.x0+" 0)");if(cb)cb()})}
 function runIntro(){show(S1);
-  runS1(S1,function(){S2.x=420;poseS2(S2,clock);
+  runS1(S1,function(){S2.x=420;S2.uRot=-112;S2.open=0;S2.hold=null;S2.walk=0;poseS2(S2,clock);
     dissolve(S1,S2,[S2.x0,0,1536,1024],function(){runS2(S2,function(){fadeSnd("rain",1.2);poseKid(S3.K,clock);
       dissolve(S2,S3,[S3.x0,0,1536,1024],function(){runS3(S3,function(){S4.x=300;S4.wa=0;S4.ca=0;poseS4(S4,clock);
         dissolve(S3,S4,[S4.x0,0,1536,1024],function(){runS4(S4,function(){starDone(0)})})})})})})})}
@@ -1360,7 +1369,7 @@ function round1(R,idx,cb,fadeIn,qd){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),
       var nL=Math.ceil(ord.length/2),nR=ord.length-nL;function slot(i){var left=i<nL,n=left?nL:nR,j=left?i:i-nL,y=(n===3?[400,645,890]:n===2?[522,768]:[645])[j];return [left?215:1321,y]}
       ord.forEach(function(k,i){var T=makeTile(k,slot(i),TL,K,R.ok.indexOf(k)>=0);tiles.push(T);T.g.setAttribute("opacity",0);anim(.4,function(u){T.g.setAttribute("opacity",eio(u).toFixed(2))},null,i*.06)});
       later(.5,function(){canDrag=true;sndVol(amb,ambV*.35,1.2)})});
-    later(1.2,function(){say(idx*2+1,function(){
+    later(1.2,function(){cueSnd([DRESS_SND].concat(CART_SND[R.cartoon]||[],["star"]));say(idx*2+1,function(){
       /* подсказка — только в первом раунде звезды: одна нужная вещь сама тянется к ребёнку */
       if(CUR_STAR===2&&idx===0&&worn===0&&!drag){var T=tiles.filter(function(t){return t.ok&&!t.done})[0];var p0={x:T.cx,y:T.cy};anim(1.4,function(u){if(T.done||(drag&&drag.T===T)||T.hintStop){T.hintStop=true;return}var s=Math.sin(Math.PI*u)*.45;T.cx=lerp(p0.x,768,s);T.cy=lerp(p0.y,600,s);placeTile(T)},function(){if(T.hintStop||T.done)return;T.cx=p0.x;T.cy=p0.y;placeTile(T)})}})})})});
   function makeTile(key,pos,parent,Kref,ok){var it=ITEMS[key],T={key:key,it:it,ok:ok,home:{x:pos[0],y:pos[1]},cx:pos[0],cy:pos[1],s:1};
@@ -1401,8 +1410,9 @@ function round1(R,idx,cb,fadeIn,qd){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),
     anim(.6,function(u){var e=eio(u);armTo(tmp,lerp(60,90,e),lerp(-150,-292,e),1);P1.a=lerp(-10,tmp.a,e);P1.b=lerp(0,tmp.b,e);W.setAttribute("opacity",Math.min(1,u*3).toFixed(2))},function(){
       emit=true;K.p.blow=true;play("bubbles",.5);later(3.0,function(){play("bubbles",.5)});anim(5.6,function(u){K.p.tilt=Math.sin(u*Math.PI*5)*2},function(){emit=false;K.p.blow=false;K.p.happy=true;
         anim(.5,function(u){var e=eio(u);P1.a=lerp(tmp.a,-10,e);P1.b=lerp(tmp.b,0,e)},function(){W.remove();W.done=true;later(.5,cb)})})})}
-  function cartoonPuddle(){var x0=K.x,x1=920,L=K.pose[-1],LT=[0,.5,1.15,1.8],t0=clock,tt=0,land=0,a=play("splash",.4);
-    var live=function(){var at=(a&&a.__k==="splash"&&!a.paused&&a.currentTime>0)?a.currentTime:0;tt=Math.max(tt,at||clock-t0);
+  function cartoonPuddle(){var x0=K.x,x1=920,L=K.pose[-1],LT=[0,.5,1.15,1.8],t0=clock,tt=0,land=0,go=false,a=play("splash",.4);
+    /* ждём начала звука (не дольше 0,3 с), дальше прыжки идут по часам игры — плавно, без подстройки под звук на лету */
+    var live=function(){if(!go){var at=(a&&a.__k==="splash"&&!a.paused)?a.currentTime:0;if(at>0){go=true;t0=clock-at}else if(clock-t0>.3){go=true;t0=clock}else return}tt=clock-t0;
       if(tt>=1.8){if(land<3){land=3;splash(K.x,950,.9);anim(.18,function(u){K.sq=Math.sin(Math.PI*u)*.06})}K.hop=0;L.a=10;ticks=ticks.filter(function(f){return f!==live});K.p.happy=true;later(.5,cb);return}
       var j=tt<.5?0:tt<1.15?1:2,u=(tt-LT[j])/(LT[j+1]-LT[j]);if(j>land){land=j;splash(K.x,950,.9);anim(.18,function(v){K.sq=Math.sin(Math.PI*v)*.06})}
       if(j===0)K.x=lerp(x0,x1,eio(u));K.hop=Math.sin(Math.PI*u)*(j===0?120:80);L.a=lerp(10,j===0?60:50,Math.sin(Math.PI*u))};

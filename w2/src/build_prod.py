@@ -34,7 +34,7 @@ function voiceLen(t){return .9+t.length*.065}
 var SCRIPT=[],LASTV=null,LASTI=null;function setScript(list){SCRIPT=list;if(list[0])cueVoice(list[0].v)}function hl(){}
 var VNAMES=["i1","i2","i3","i4","zhar","dozhd","sneg","osen","sport","prazd","bass","son","kuh","vel","og","fut","d","m"];
 var BGV={sun:"zhar",rain:"dozhd",winter:"sneg",autumn:"osen",gym:"sport",party:"prazd",pool:"bass",bedroom:"son",kitchen:"kuh",bike:"vel",garden:"og",field:"fut"};
-function say(i,cb){LASTV=SCRIPT[i].v;LASTI=i;var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);later(d,function(){var n=SCRIPT[i+1];if(n)cueVoice(n.v);if(cb)cb()});return d}
+function say(i,cb){LASTV=SCRIPT[i].v;LASTI=i;var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);later(d,function(){cueAfter(i);if(cb)cb()});return d}
 
 '''+js[j:]
 # 4. конец звезды: похвала, звезда, дальше следующая звезда или финал
