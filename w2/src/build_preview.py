@@ -23,7 +23,7 @@ for k in ["i1","i2","i3","i4","zhar","dozhd","sneg","osen","sport","prazd","bass
     p=R+k+'.m4a'
     if os.path.exists(p): vd[k]=du(p,'audio/mp4')
 import json
-s=s.replace('a.src=VBASE+k+".m4a";VOICE[k]=a});','if(VDATA[k])a.src=blobUrl(VDATA[k]);VOICE[k]=a});')
-s=s.replace('var VBASE="https://cdn.jsdelivr.net/gh/pandora28546-lab/wardrobe@main/w2/",VOICE={};','var VDATA='+json.dumps(vd)+',VOICE={};')
-assert 'VDATA[k]' in s
+s=s.replace('VURL[k]=VBASE+k+".m4a";','VURL[k]=VDATA[k]?blobUrl(VDATA[k]):"";')
+s=s.replace('var VBASE="https://cdn.jsdelivr.net/gh/pandora28546-lab/wardrobe@main/",','var VDATA='+json.dumps(vd)+',')
+assert 'VDATA[k]' in s and 'var VDATA' in s
 open(out,'w').write(s);print(len(s)//1024,'KB')
