@@ -23,7 +23,9 @@ var NEXT_GAME_URL=(window.SG_CFG&&window.SG_CFG.next)||"https://sofiatmn.ru/";
 var A={star:G2URL+"Starsystems.png",snd:{}};
 ["splash","splash1","rain","umbrella","click","bell","steps","dress","bubbles","snowball","leaves","chop","clank","blow","kick","pop"].forEach(function(k){A.snd[k]=W2+k+".m4a"});
 A.snd.dr2=W2+"kalimba.m4a";
-[["ambS","amb-summer"],["ambR","amb-rain"],["ambA","amb-autumn"],["ambW","amb-winter"],["ambG","amb-gym"],["ambPA","amb-party"],["ambP","amb-pool"],["ambN","amb-night"],["ambF","amb-whistle"],["ambK","amb-kitchen"]].forEach(function(q){A.snd[q[0]]=W2+q[1]+".m4a"});
+/* свистки — новый файл, ссылка по коммиту (по @main кэш jsDelivr мог отдавать 404) */
+A.snd.ambF="https://cdn.jsdelivr.net/gh/pandora28546-lab/wardrobe@d12e445e2b70992d3447dcfbe8c03fbc567e2430/w2/amb-whistle.m4a";
+[["ambS","amb-summer"],["ambR","amb-rain"],["ambA","amb-autumn"],["ambW","amb-winter"],["ambG","amb-gym"],["ambPA","amb-party"],["ambP","amb-pool"],["ambN","amb-night"],["ambK","amb-kitchen"]].forEach(function(q){A.snd[q[0]]=W2+q[1]+".m4a"});
 A.snd.star=DBASE+encodeURIComponent("stage complete.wav");A.snd.fanfare=DBASE+"fanfare.wav";A.snd.correct=DBASE+"correct.wav";A.snd.music=G2URL+"Music.m4a";
 var PRAISE=[3,4,5,6,7,8,9].map(function(n){return PBASE+"Rock"+n+".m4a"});
 var objUrls={};function srcFor(u){return objUrls[u]||u}
@@ -998,11 +1000,9 @@ function voiceLen(t){return .9+t.length*.065}
 var SCRIPT=[],LASTV=null,LASTI=null;function setScript(list){SCRIPT=list}function hl(){}
 var VNAMES=["i1","i2","i3","i4","zhar","dozhd","sneg","osen","sport","prazd","bass","son","kuh","vel","og","fut","d","m"],VOICE={},VURL={};
 function buildVoice(){VNAMES.forEach(function(k){var u=VURL[k];if(!u)return;var a=new Audio();a.preload="auto";
-  a.addEventListener("loadedmetadata",function(){if(isFinite(a.duration)&&a.duration>0)a.dur=a.duration});a.src=u;try{a.load()}catch(e){}VOICE[k]=a})}
+  a.addEventListener("loadedmetadata",function(){if(isFinite(a.duration)&&a.duration>0)a.dur=a.duration});a.src=u;VOICE[k]=a})}
 var BGV={sun:"zhar",rain:"dozhd",winter:"sneg",autumn:"osen",gym:"sport",party:"prazd",pool:"bass",bedroom:"son",kitchen:"kuh",bike:"vel",garden:"og",field:"fut"};
-function sayVoice(k){var a=VOICE[k];if(!soundOn||!a)return 0;try{a.pause();a.currentTime=0;a.volume=1}catch(e){}
-  if(!a.rw){a.rw=1;a.addEventListener("ended",function(){try{a.currentTime=0}catch(e){}})}
-  var p=a.play();if(p&&p.catch)p.catch(function(){});return a.dur?a.dur+.15:0}
+function sayVoice(k){var a=VOICE[k];if(!soundOn||!a||!a.dur)return 0;try{a.pause();a.currentTime=0;a.volume=1}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){});return a.dur+.15}
 function say(i,cb){LASTV=SCRIPT[i].v;LASTI=i;var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);later(d,function(){if(cb)cb()});return d}
 
 /* ───────── камера ───────── */
@@ -1189,11 +1189,15 @@ var INTRO_SCRIPT=[
  {who:"Сцена 4 · велосипед",txt:"На велосипеде катаемся в шлеме и наколенниках.",v:"i4"}];
 var S1,S2,S3,S4;
 function buildIntro(){SC=[];S1=scene(buildS1,1536);S2=scene(buildS2,S2W);S3=scene(buildS3,1536);S4=scene(buildS4,S4W)}
-function runIntro(){show(S1);show(S2);S2.x=420;poseS2(S2,clock);
-  runS1(S1,function(){show(S2);S2.x=420;poseS2(S2,clock);var c=[S2.x0,0,1536,1024];
-    panTo(c,1.2,function(){hide(S1);runS2(S2,function(){fadeSnd("rain",1.2);show(S3);poseKid(S3.K,clock);show(S4);S4.x=300;S4.wa=0;S4.ca=0;poseS4(S4,clock);
-      panTo([S3.x0,0,1536,1024],1.2,function(){hide(S2);runS3(S3,function(){show(S4);S4.x=300;poseS4(S4,clock);
-        panTo([S4.x0,0,1536,1024],1.2,function(){hide(S3);runS4(S4,function(){starDone(0,afterStar)})})})})})})})}
+/* смена сцен вступления — растворение: прошлая сцена (пересчитанная под камеру новой) плавно гаснет поверх новой; соседние сцены не видны */
+function dissolve(A,B,N,cb){var c=CAM.slice(),k=N[2]/c[2];show(B);ROOT.appendChild(A.g);
+  A.g.setAttribute("transform","translate("+f1(N[0]-c[0]*k+A.x0*k)+" "+f1(N[1]-c[1]*k)+") scale("+k.toFixed(4)+")");camFn=null;CAM=N.slice();
+  anim(.8,function(u){A.g.setAttribute("opacity",(1-eio(u)).toFixed(2))},function(){hide(A);A.g.removeAttribute("opacity");A.g.setAttribute("transform","translate("+A.x0+" 0)");if(cb)cb()})}
+function runIntro(){show(S1);
+  runS1(S1,function(){S2.x=420;poseS2(S2,clock);
+    dissolve(S1,S2,[S2.x0,0,1536,1024],function(){runS2(S2,function(){fadeSnd("rain",1.2);poseKid(S3.K,clock);
+      dissolve(S2,S3,[S3.x0,0,1536,1024],function(){runS3(S3,function(){S4.x=300;S4.wa=0;S4.ca=0;poseS4(S4,clock);
+        dissolve(S3,S4,[S4.x0,0,1536,1024],function(){runS4(S4,function(){starDone(0,afterStar)})})})})})})})}
 
 /* ═════════ ЗВЕЗДА 2 — РАУНДЫ: одень по погоде ═════════ */
 var ROUNDS=[
@@ -1362,11 +1366,7 @@ function grab(u,ok,bad){fetch(u).then(function(r){if(!r.ok)throw 0;return r.blob
   VNAMES.forEach(function(k){grab(REPO+k+".m4a",function(x){VURL[k]=x;tickLoad()},tickLoad)});
   var im=new Image();im.onload=im.onerror=tickLoad;im.src=A.star})();
 function onLoaded(){$id("sg-loading").style.display="none";loadedReady=true;if(isPhone())syncMobileUI();else $id("sg-start-overlay").style.display="flex"}
-/* вступление уже построено при загрузке — по «Начать» не перестраиваем, только пауза 0,6 с */
-$id("sg-start-btn").addEventListener("click",function(){$id("sg-start-overlay").style.display="none";unlock();
-  /* сразу останавливаем всё, что разблокировали (раньше это делала перестройка сцены) — иначе на iPad звучит всё разом */
-  Object.keys(AUD).map(function(k){return AUD[k]}).concat(PRA).concat(Object.keys(VOICE).map(function(k){return VOICE[k]})).forEach(function(a){try{a.pause();a.currentTime=0}catch(e){}});
-  started=true;syncMobileUI();later(.6,runIntro)});
+$id("sg-start-btn").addEventListener("click",function(){$id("sg-start-overlay").style.display="none";unlock();started=true;syncMobileUI();prepare(false);later(.6,runIntro)});
 
 /* ─── полноэкранный режим и поворот телефона (как в первой игре «Гардероб») ─── */
 var game=GAME,fsWrap=$id("sg-fs-wrap"),rotEl=$id("sg-rotate"),canRealFS=!!(fsWrap.requestFullscreen||fsWrap.webkitRequestFullscreen),pseudoFS=false;

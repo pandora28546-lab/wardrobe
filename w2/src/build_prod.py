@@ -17,7 +17,9 @@ var NEXT_GAME_URL=(window.SG_CFG&&window.SG_CFG.next)||"https://sofiatmn.ru/";
 var A={star:G2URL+"Starsystems.png",snd:{}};
 ["splash","splash1","rain","umbrella","click","bell","steps","dress","bubbles","snowball","leaves","chop","clank","blow","kick","pop"].forEach(function(k){A.snd[k]=W2+k+".m4a"});
 A.snd.dr2=W2+"kalimba.m4a";
-[["ambS","amb-summer"],["ambR","amb-rain"],["ambA","amb-autumn"],["ambW","amb-winter"],["ambG","amb-gym"],["ambPA","amb-party"],["ambP","amb-pool"],["ambN","amb-night"],["ambF","amb-whistle"],["ambK","amb-kitchen"]].forEach(function(q){A.snd[q[0]]=W2+q[1]+".m4a"});
+/* свистки — новый файл, ссылка по коммиту (по @main кэш jsDelivr мог отдавать 404) */
+A.snd.ambF="https://cdn.jsdelivr.net/gh/pandora28546-lab/wardrobe@d12e445e2b70992d3447dcfbe8c03fbc567e2430/w2/amb-whistle.m4a";
+[["ambS","amb-summer"],["ambR","amb-rain"],["ambA","amb-autumn"],["ambW","amb-winter"],["ambG","amb-gym"],["ambPA","amb-party"],["ambP","amb-pool"],["ambN","amb-night"],["ambK","amb-kitchen"]].forEach(function(q){A.snd[q[0]]=W2+q[1]+".m4a"});
 A.snd.star=DBASE+encodeURIComponent("stage complete.wav");A.snd.fanfare=DBASE+"fanfare.wav";A.snd.correct=DBASE+"correct.wav";A.snd.music=G2URL+"Music.m4a";
 var PRAISE=[3,4,5,6,7,8,9].map(function(n){return PBASE+"Rock"+n+".m4a"});
 var objUrls={};function srcFor(u){return objUrls[u]||u}'''+js[j:]
@@ -39,11 +41,9 @@ function voiceLen(t){return .9+t.length*.065}
 var SCRIPT=[],LASTV=null,LASTI=null;function setScript(list){SCRIPT=list}function hl(){}
 var VNAMES=["i1","i2","i3","i4","zhar","dozhd","sneg","osen","sport","prazd","bass","son","kuh","vel","og","fut","d","m"],VOICE={},VURL={};
 function buildVoice(){VNAMES.forEach(function(k){var u=VURL[k];if(!u)return;var a=new Audio();a.preload="auto";
-  a.addEventListener("loadedmetadata",function(){if(isFinite(a.duration)&&a.duration>0)a.dur=a.duration});a.src=u;try{a.load()}catch(e){}VOICE[k]=a})}
+  a.addEventListener("loadedmetadata",function(){if(isFinite(a.duration)&&a.duration>0)a.dur=a.duration});a.src=u;VOICE[k]=a})}
 var BGV={sun:"zhar",rain:"dozhd",winter:"sneg",autumn:"osen",gym:"sport",party:"prazd",pool:"bass",bedroom:"son",kitchen:"kuh",bike:"vel",garden:"og",field:"fut"};
-function sayVoice(k){var a=VOICE[k];if(!soundOn||!a)return 0;try{a.pause();a.currentTime=0;a.volume=1}catch(e){}
-  if(!a.rw){a.rw=1;a.addEventListener("ended",function(){try{a.currentTime=0}catch(e){}})}
-  var p=a.play();if(p&&p.catch)p.catch(function(){});return a.dur?a.dur+.15:0}
+function sayVoice(k){var a=VOICE[k];if(!soundOn||!a||!a.dur)return 0;try{a.pause();a.currentTime=0;a.volume=1}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){});return a.dur+.15}
 function say(i,cb){LASTV=SCRIPT[i].v;LASTI=i;var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);later(d,function(){if(cb)cb()});return d}
 
 '''+js[j:]
