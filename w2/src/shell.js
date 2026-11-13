@@ -4,7 +4,7 @@ function $id(i){return document.getElementById(i)}
 function mark(){}
 var mode="intro",started=false,loadedReady=false,STAGE=$id("sg-stage");
 function reset(keepStars){tok++;tw=[];ticks=[];kids=[];splashes=[];ROOT.innerHTML="";FX.innerHTML="";BGROOT.innerHTML="";bgBlur(false);musicHold(true);drag=null;G2={};camFn=null;CAM=[0,0,1536,1024];
-  Object.keys(AUD).forEach(function(k){if(k!=="star"&&k!=="fanfare")try{AUD[k].pause()}catch(e){}});Object.keys(VOICE).forEach(function(k){try{VOICE[k].pause()}catch(e){}});
+  stopAll(true);
   if(!keepStars)starBacks.forEach(function(b){b.classList.remove("sg-earned","sg-pulse")});BIG.style.display="none"}
 function prepare(keepStars){reset(keepStars);
   if(mode==="intro"){setScript(INTRO_SCRIPT);buildIntro();show(S1);
@@ -20,7 +20,7 @@ function goStar(n){var t0=Date.now();(function w(){/* сначала даём д
   var c=CAM.slice(),N=[77,51,1382,921],k=N[2]/c[2],tr="translate("+f1(N[0]-c[0]*k)+" "+f1(N[1]-c[1]*k)+") scale("+k.toFixed(4)+")";
   var oG=el("g",{transform:tr}),oB=el("g",{transform:tr});while(ROOT.firstChild)oG.appendChild(ROOT.firstChild);while(BGROOT.firstChild)oB.appendChild(BGROOT.firstChild);FX.innerHTML="";
   tok++;tw=[];ticks=[];kids=[];splashes=[];camFn=null;drag=null;musicHold(true);
-  Object.keys(AUD).forEach(function(q){if(q!=="star"&&q!=="fanfare")try{AUD[q].pause()}catch(e){}});Object.keys(VOICE).forEach(function(q){try{VOICE[q].pause()}catch(e){}});
+  stopAll(true);
   ROOT.appendChild(oG);BGROOT.appendChild(oB);G2={prev:{g:oG,bg:oB}};CAM=N.slice();
   mode="star";CUR_STAR=n;START_R=0;setScript(starScript());earnedBefore();runStar2()})()}
 function afterStar(){if(mode==="intro"){goStar(2);return}if(CUR_STAR<4){goStar(CUR_STAR+1);return}
@@ -33,14 +33,14 @@ $id("sg-nextbtn").addEventListener("click",function(){try{window.top.location.hr
 /* 🔊 — повторить последнюю фразу; 🎶 — фоновая музыка (по умолчанию выключена) */
 /* 🔊 в звёздах 2–4 повторяет условие раунда («Мы идём в спортзал»), затем задание */
 $id("sg-repeat").addEventListener("click",function(){if(!started||LASTI==null||!SCRIPT[LASTI])return;
-  if(Object.keys(VOICE).some(function(k){return !VOICE[k].paused}))return;var i=LASTI;
+  if(voiceBusy())return;var i=LASTI;
   if(mode!=="intro"&&i%2===1)i--;var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);
   if(mode!=="intro"&&SCRIPT[i+1])later(d,function(){sayVoice(SCRIPT[i+1].v)})});
 $id("sg-music").addEventListener("click",function(){musicOn=!musicOn;this.classList.toggle("sg-off",!musicOn);musicHold(musicHeld)});
 /* вкладка скрыта — звук на паузу, вернулись — продолжаем то, что играло */
 var hiddenPlaying=[];
 document.addEventListener("visibilitychange",function(){
-  if(document.hidden){hiddenPlaying=[];Object.keys(AUD).map(function(k){return AUD[k]}).concat(Object.keys(VOICE).map(function(k){return VOICE[k]})).forEach(function(a){if(!a.paused){hiddenPlaying.push(a);try{a.pause()}catch(e){}}})}
+  if(document.hidden){hiddenPlaying=[];SALL.forEach(function(a){if(!a.paused){hiddenPlaying.push(a);try{a.pause()}catch(e){}}})}
   else{hiddenPlaying.forEach(function(a){var p=a.play();if(p&&p.catch)p.catch(function(){})});hiddenPlaying=[]}});
 
 /* ───────── загрузка: всё скачивается заранее в память (blob), полоска — собачка ───────── */
@@ -51,7 +51,8 @@ function grab(u,ok,bad){fetch(u).then(function(r){if(!r.ok)throw 0;return r.blob
 (function(){var urls=[],seen={};Object.keys(A.snd).forEach(function(k){var u=A.snd[k];if(!seen[u]){seen[u]=1;urls.push(u)}});urls=urls.concat(PRAISE);
   total=urls.length+VNAMES.length+1;
   urls.forEach(function(u){grab(u,function(x){objUrls[u]=x;tickLoad()},tickLoad)});
-  VNAMES.forEach(function(k){grab(REPO+k+".m4a",function(x){VURL[k]=x;tickLoad()},tickLoad)});
+  VNAMES.forEach(function(k){var u=REPO+k+".m4a";fetch(u).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()}).then(function(b){var d=mp4Dur(b);if(d)VDUR[k]=d;
+    var x=u;try{x=URL.createObjectURL(new Blob([b],{type:"audio/mp4"}))}catch(e){}VURL[k]=x;tickLoad()}).catch(function(){VURL[k]=u;tickLoad()})});
   var im=new Image();im.onload=im.onerror=tickLoad;im.src=A.star})();
 function onLoaded(){$id("sg-loading").style.display="none";loadedReady=true;if(isPhone())syncMobileUI();else $id("sg-start-overlay").style.display="flex"}
 $id("sg-start-btn").addEventListener("click",function(){$id("sg-start-overlay").style.display="none";unlock();started=true;syncMobileUI();prepare(false);later(.6,runIntro)});

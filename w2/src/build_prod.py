@@ -23,28 +23,18 @@ A.snd.ambF="https://cdn.jsdelivr.net/gh/pandora28546-lab/wardrobe@d12e445e2b7099
 A.snd.star=DBASE+encodeURIComponent("stage complete.wav");A.snd.fanfare=DBASE+"fanfare.wav";A.snd.correct=DBASE+"correct.wav";A.snd.music=G2URL+"Music.m4a";
 var PRAISE=[3,4,5,6,7,8,9].map(function(n){return PBASE+"Rock"+n+".m4a"});
 var objUrls={};function srcFor(u){return objUrls[u]||u}'''+js[j:]
-# 2. звук: из заранее скачанных blob-ссылок; похвала — случайная Rock3–Rock9
-rep('''function blobUrl(d){try{var b=atob(d.split(",")[1]),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return URL.createObjectURL(new Blob([a],{type:"audio/mp4"}))}catch(e){return d}}
-function buildAudio(){var u={};Object.keys(A.snd).forEach(function(k){u[k]=blobUrl(A.snd[k])});
-  Object.keys(u).forEach(function(k){if(k==="pym")return;var a=new Audio();a.preload="auto";a.src=u[k];AUD[k]=a});
-  for(var i=0;i<3;i++){var a=new Audio();a.preload="auto";a.src=u.pym;PYMS.push(a)}}''',
-'''var PRA=[];
-function buildAudio(){Object.keys(A.snd).forEach(function(k){var a=new Audio();a.preload="auto";a.src=srcFor(A.snd[k]);AUD[k]=a});
-  PRAISE.forEach(function(u){var a=new Audio();a.preload="auto";a.src=srcFor(u);PRA.push(a)});buildVoice()}
-function praise(){if(!soundOn||!PRA.length)return;var a=PRA[Math.floor(Math.random()*PRA.length)];try{a.currentTime=0}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){})}''')
-rep('.concat(PYMS).concat(Object.keys(VOICE)','.concat(PRA).concat(Object.keys(VOICE)')
+# 2. звук: общие плееры из src2.html; ссылки — заранее скачанные blob; похвала — случайная Rock3–Rock9
+rep('''function buildAudio(){Object.keys(A.snd).forEach(function(k){if(k!=="pym")SU[k]=blobUrl(A.snd[k])})}''',
+'''function buildAudio(){Object.keys(A.snd).forEach(function(k){SU[k]=srcFor(A.snd[k])});PRAISE_U=PRAISE.map(srcFor)}''')
 js=js.replace('play("praise")','praise()')
-# 3. озвучка: голос Софьи, файлы скачаны при загрузке; длительность — из самого файла
+# 3. озвучка: голос Софьи — <имя>.m4a в корне репо; файлы и длительности (из заголовка m4a) скачивает оболочка
 i=js.index('/* ───────── озвучка текстом ───────── */');j=js.index('/* ───────── камера ───────── */')
-js=js[:i]+'''/* ───────── озвучка: голос Софьи — <имя>.m4a в корне репо wardrobe ───────── */
+js=js[:i]+'''/* ───────── озвучка: голос Софьи — <имя>.m4a в корне репо wardrobe; играет через общий плеер речи SV ───────── */
 function voiceLen(t){return .9+t.length*.065}
-var SCRIPT=[],LASTV=null,LASTI=null;function setScript(list){SCRIPT=list}function hl(){}
-var VNAMES=["i1","i2","i3","i4","zhar","dozhd","sneg","osen","sport","prazd","bass","son","kuh","vel","og","fut","d","m"],VOICE={},VURL={};
-function buildVoice(){VNAMES.forEach(function(k){var u=VURL[k];if(!u)return;var a=new Audio();a.preload="auto";
-  a.addEventListener("loadedmetadata",function(){if(isFinite(a.duration)&&a.duration>0)a.dur=a.duration});a.src=u;VOICE[k]=a})}
+var SCRIPT=[],LASTV=null,LASTI=null;function setScript(list){SCRIPT=list;if(list[0])cueVoice(list[0].v)}function hl(){}
+var VNAMES=["i1","i2","i3","i4","zhar","dozhd","sneg","osen","sport","prazd","bass","son","kuh","vel","og","fut","d","m"];
 var BGV={sun:"zhar",rain:"dozhd",winter:"sneg",autumn:"osen",gym:"sport",party:"prazd",pool:"bass",bedroom:"son",kitchen:"kuh",bike:"vel",garden:"og",field:"fut"};
-function sayVoice(k){var a=VOICE[k];if(!soundOn||!a||!a.dur)return 0;try{a.pause();a.currentTime=0;a.volume=1}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){});return a.dur+.15}
-function say(i,cb){LASTV=SCRIPT[i].v;LASTI=i;var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);later(d,function(){if(cb)cb()});return d}
+function say(i,cb){LASTV=SCRIPT[i].v;LASTI=i;var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);later(d,function(){var n=SCRIPT[i+1];if(n)cueVoice(n.v);if(cb)cb()});return d}
 
 '''+js[j:]
 # 4. конец звезды: похвала, звезда, дальше следующая звезда или финал

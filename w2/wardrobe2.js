@@ -975,21 +975,47 @@ function sideHead(parent,kind){var h=el("g",{transform:"translate(0 -386)"},pare
 function sideBlink(H,t,happy){if(t>(H.blinkAt||0)){H.blinkT=t;H.blinkAt=t+rr(2,3.6)}var bt=t-(H.blinkT||-9),bk=bt<.18?1-Math.abs(bt-.09)/.09:0;
   H.eye.setAttribute("transform","translate("+H.eyeC[0]+" "+H.eyeC[1]+") scale(1 "+(1-bk*.9).toFixed(2)+") translate("+(-H.eyeC[0])+" "+(-H.eyeC[1])+")");H.eye.setAttribute("opacity",1);H.happy.setAttribute("opacity",0);H.mouth.setAttribute("opacity",1);H.mouth.setAttribute("opacity",happy?0:1);H.smile.setAttribute("opacity",happy?1:0);H.grin.setAttribute("opacity",0)}
 
-/* ───────── звук ───────── */
-var AUD={},soundOn=true,PYMS=[],pymI=0;
-var PRA=[];
-function buildAudio(){Object.keys(A.snd).forEach(function(k){var a=new Audio();a.preload="auto";a.src=srcFor(A.snd[k]);AUD[k]=a});
-  PRAISE.forEach(function(u){var a=new Audio();a.preload="auto";a.src=srcFor(u);PRA.push(a)});buildVoice()}
-function praise(){if(!soundOn||!PRA.length)return;var a=PRA[Math.floor(Math.random()*PRA.length)];try{a.currentTime=0}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){})}
+/* ───────── звук: несколько общих плееров, как в «Повелительном наклонении» ─────────
+   SV — речь (фразы и похвала), SA — 2 плеера фона (чтобы фоны могли смениться с затуханием),
+   SF — 3 плеера звуков действия, SM — музыка. Все 7 разблокируются одним нажатием «Старт».
+   Звук ищется по ключу: плеер помнит, какой звук в нём стоит (__k), и не перезагружает файл, если он уже стоит. */
+var soundOn=true,SU={},VURL={},VDUR={},PRAISE_U=[];
 var SILENT_WAV="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
-function unlock(){Object.keys(AUD).map(function(k){return AUD[k]}).concat(PRA).concat(Object.keys(VOICE).map(function(k){return VOICE[k]})).forEach(function(a){var real=a.src;if(!real)return;
-  var back=function(){try{a.pause();a.src=real;a.currentTime=0}catch(e){}};try{a.src=SILENT_WAV;var p=a.play();if(p&&p.then)p.then(back,back);else back()}catch(e){back()}})}
+function mkEl(){var a=new Audio();a.preload="auto";a.__k=null;a.__u=null;a.__g=0;a.__t=0;return a}
+var SV=mkEl(),SM=mkEl(),SA=[mkEl(),mkEl()],SF=[mkEl(),mkEl(),mkEl()],SALL=[SV,SM].concat(SA,SF);
+SV.addEventListener("loadedmetadata",function(){var k=SV.__k;if(k&&k.indexOf("v:")===0&&!VDUR[k.slice(2)]&&isFinite(SV.duration)&&SV.duration>0)VDUR[k.slice(2)]=SV.duration});
+function blobUrl(d){try{var b=atob(d.split(",")[1]),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return URL.createObjectURL(new Blob([a],{type:"audio/mp4"}))}catch(e){return d}}
+function buildAudio(){Object.keys(A.snd).forEach(function(k){SU[k]=srcFor(A.snd[k])});PRAISE_U=PRAISE.map(srcFor)}
+/* длительность m4a — из заголовка файла (mvhd), без плеера */
+function mp4Dur(buf){try{var b=new Uint8Array(buf),dv=new DataView(buf);for(var i=4;i<b.length-24;i++)if(b[i]===109&&b[i+1]===118&&b[i+2]===104&&b[i+3]===100){var v=b[i+4],ts,du;
+  if(v===1){ts=dv.getUint32(i+24);du=dv.getUint32(i+28)*4294967296+dv.getUint32(i+32)}else{ts=dv.getUint32(i+16);du=dv.getUint32(i+20)}return ts>0&&du>0?du/ts:0}}catch(e){}return 0}
+function setSrc(a,u){if(a.__u===u)return;try{a.pause()}catch(e){}a.__u=u;try{a.src=u}catch(e){}}
+function busy(a){return !a.paused&&!a.ended}
+/* разблокировка: каждый из 7 плееров один раз играет тишину в момент нажатия. Если пока тишина не доиграла,
+   плеер уже понадобился (например, первая фраза), — тишину не трогаем, иначе она бы остановила настоящий звук. */
+function unlock(){SALL.forEach(function(a){var prev=a.__u&&a.__u!==SILENT_WAV?a.__u:null;a.__u=SILENT_WAV;a.__k=null;
+  var done=function(){if(a.__u!==SILENT_WAV)return;try{a.pause()}catch(e){}if(prev)setSrc(a,prev)};
+  try{a.loop=false;a.src=SILENT_WAV;var p=a.play();if(p&&p.then)p.then(done,done);else done()}catch(e){done()}})}
+function startEl(a,k,u,vol,loop){setSrc(a,u);a.__k=k;a.__g++;a.__t=performance.now();try{a.loop=!!loop;a.volume=vol==null?1:vol;a.currentTime=0}catch(e){}
+  var p=a.play();if(p&&p.catch)p.catch(function(){});return a}
+function isAmb(k){return k==="rain"||k.indexOf("amb")===0}
+/* плеер для звука: тот, где этот звук уже стоит; иначе свободный; иначе тот, что запущен раньше всех */
+function pick(pool,k){var i;for(i=0;i<pool.length;i++)if(pool[i].__k===k)return pool[i];for(i=0;i<pool.length;i++)if(!busy(pool[i])&&pool[i].__u!==SILENT_WAV)return pool[i];
+  for(i=0;i<pool.length;i++)if(!busy(pool[i]))return pool[i];var o=pool[0];pool.forEach(function(b){if(b.__t<o.__t)o=b});return o}
+function elFor(k){var L=SA.concat(SF);for(var i=0;i<L.length;i++)if(L[i].__k===k&&busy(L[i]))return L[i];return null}
 var musicOn=false,musicHeld=true,DRESS_SND="dr2";
-function musicHold(h){musicHeld=h;var a=AUD.music;if(!a)return;try{if(h||!musicOn)a.pause();else{a.loop=true;a.volume=1;var p=a.play();if(p&&p.catch)p.catch(function(){})}}catch(e){}}
-function play(k,vol){if(!soundOn)return;var a=k==="pym"?PYMS[pymI++%3]:AUD[k];if(!a)return;try{a.pause();a.currentTime=0;a.volume=vol==null?1:vol}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){})}
-function sndVol(k,v,d){var a=AUD[k];if(!a)return;var v0=a.volume;anim(d,function(u){try{a.volume=lerp(v0,v,u)}catch(e){}})}
-function stopSnd(k){var a=AUD[k];if(a)try{a.pause()}catch(e){}}
-function fadeSnd(k,d){var a=AUD[k];if(!a)return;var v0=a.volume;anim(d,function(u){try{a.volume=Math.max(0,v0*(1-u))}catch(e){}},function(){try{a.pause()}catch(e){}})}
+function musicHold(h){musicHeld=h;try{if(h||!musicOn||!SU.music)SM.pause();else{setSrc(SM,SU.music);SM.__k="music";SM.loop=true;SM.volume=1;var p=SM.play();if(p&&p.catch)p.catch(function(){})}}catch(e){}}
+function play(k,vol){if(!soundOn)return null;if(k==="praise")return praise();var u=SU[k];if(!u)return null;var am=isAmb(k);return startEl(pick(am?SA:SF,k),k,u,vol,am)}
+function praise(){if(!soundOn)return null;var L=PRAISE_U.length?PRAISE_U:(SU.praise?[SU.praise]:[]);if(!L.length)return null;return startEl(SV,"praise",L[Math.floor(Math.random()*L.length)],1,false)}
+function sndVol(k,v,d){var a=elFor(k);if(!a)return;var g=a.__g,v0=a.volume;anim(d,function(u){if(a.__g===g)try{a.volume=lerp(v0,v,u)}catch(e){}})}
+function stopSnd(k){var a=elFor(k);if(a)try{a.pause()}catch(e){}}
+function fadeSnd(k,d){var a=elFor(k);if(!a)return;var g=a.__g,v0=a.volume;anim(d,function(u){if(a.__g===g)try{a.volume=Math.max(0,v0*(1-u))}catch(e){}},function(){if(a.__g===g)try{a.pause()}catch(e){}})}
+/* остановить всё (кроме звезды и фанфар, если keepStar); музыкой управляет musicHold */
+function stopAll(keepStar){[SV].concat(SA,SF).forEach(function(a){if(keepStar&&(a.__k==="star"||a.__k==="fanfare"))return;try{a.pause()}catch(e){}})}
+function voiceBusy(){return busy(SV)}
+/* речь: файл ставится в плеер заранее (пока предыдущая фраза кончилась), чтобы в момент фразы не ждать загрузки */
+function cueVoice(k){var u=k&&VURL[k];if(!u||busy(SV)||SV.__u===SILENT_WAV)return;setSrc(SV,u);SV.__k="v:"+k}
+function sayVoice(k){var u=VURL[k];if(!soundOn||!u)return 0;startEl(SV,"v:"+k,u,1,false);var d=VDUR[k];return d?d+.15:0}
 
 /* ───────── время ───────── */
 var clock=0,tw=[],tok=0;
@@ -997,15 +1023,12 @@ function anim(dur,upd,done,delay){tw.push({t0:clock+(delay||0),d:dur,u:upd,cb:do
 function later(sec,cb){anim(.0001,function(){},cb,sec)}
 function stepTw(){var list=tw;tw=[];list.forEach(function(a){if(a.tk!==tok)return;if(clock<a.t0){tw.push(a);return}var u=clamp((clock-a.t0)/a.d,0,1);a.u(u);if(u<1)tw.push(a);else if(a.cb)a.cb()})}
 
-/* ───────── озвучка: голос Софьи — <имя>.m4a в корне репо wardrobe ───────── */
+/* ───────── озвучка: голос Софьи — <имя>.m4a в корне репо wardrobe; играет через общий плеер речи SV ───────── */
 function voiceLen(t){return .9+t.length*.065}
-var SCRIPT=[],LASTV=null,LASTI=null;function setScript(list){SCRIPT=list}function hl(){}
-var VNAMES=["i1","i2","i3","i4","zhar","dozhd","sneg","osen","sport","prazd","bass","son","kuh","vel","og","fut","d","m"],VOICE={},VURL={};
-function buildVoice(){VNAMES.forEach(function(k){var u=VURL[k];if(!u)return;var a=new Audio();a.preload="auto";
-  a.addEventListener("loadedmetadata",function(){if(isFinite(a.duration)&&a.duration>0)a.dur=a.duration});a.src=u;VOICE[k]=a})}
+var SCRIPT=[],LASTV=null,LASTI=null;function setScript(list){SCRIPT=list;if(list[0])cueVoice(list[0].v)}function hl(){}
+var VNAMES=["i1","i2","i3","i4","zhar","dozhd","sneg","osen","sport","prazd","bass","son","kuh","vel","og","fut","d","m"];
 var BGV={sun:"zhar",rain:"dozhd",winter:"sneg",autumn:"osen",gym:"sport",party:"prazd",pool:"bass",bedroom:"son",kitchen:"kuh",bike:"vel",garden:"og",field:"fut"};
-function sayVoice(k){var a=VOICE[k];if(!soundOn||!a||!a.dur)return 0;try{a.pause();a.currentTime=0;a.volume=1}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){});return a.dur+.15}
-function say(i,cb){LASTV=SCRIPT[i].v;LASTI=i;var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);later(d,function(){if(cb)cb()});return d}
+function say(i,cb){LASTV=SCRIPT[i].v;LASTI=i;var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);later(d,function(){var n=SCRIPT[i+1];if(n)cueVoice(n.v);if(cb)cb()});return d}
 
 /* ───────── камера ───────── */
 var CAM=[0,0,1536,1024],camFn=null;
@@ -1100,7 +1123,7 @@ function runS2(o,cb){o.x=420;o.uRot=-112;o.open=0;o.hold=null;var X0=360,X1=980,
       play("umbrella",.45);anim(.4,function(u){o.open=back(u)})});
     later(1.3,function(){walk(X1,X2,2.6,function(){later(.6,function(){ticks=ticks.filter(function(f){return f!==o.live});cb()})})})});
   /* дождь начинается, пока она идёт */
-  anim(1.0,function(u){o.rainOn=u;o.dark.setAttribute("opacity",(.05+.2*u).toFixed(3))},null,1.2);later(1.2,function(){play("rain",.0);var a=AUD.rain;try{a.loop=true}catch(e){}anim(1.0,function(u){try{a.volume=u*.4}catch(e){}})});
+  anim(1.0,function(u){o.rainOn=u;o.dark.setAttribute("opacity",(.05+.2*u).toFixed(3))},null,1.2);later(1.2,function(){var a=play("rain",0);if(a){var g=a.__g;anim(1.0,function(u){if(a.__g===g)try{a.volume=u*.4}catch(e){}})}});
   later(2.0,function(){say(1)})}
 
 /* 3. Сон: спереди, камера стоит */
@@ -1234,7 +1257,7 @@ function round1(R,idx,cb,fadeIn,qd){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),
   o.bubL=el("g",{},null);
   var K=null,tiles=[],need=R.ok.length,worn=0,canDrag=false;G2.tiles=tiles;
   var amb={sun:"ambS",rain:"ambR",winter:"ambW",autumn:"ambA",pool:"ambP",bike:"ambS",garden:"ambS",field:"ambF",kitchen:"ambK",gym:"ambG",party:"ambPA",bedroom:"ambN"}[R.bg]||"none",ambV={ambR:.45,ambW:.45,ambA:.5,ambP:.3,ambG:.7,ambPA:.6,ambN:.8}[amb]||.9;
-  later(qd||0,function(){musicHold(true);var keepAmb=G2.prevAmb===amb;if(G2.prevAmb&&!keepAmb)fadeSnd(G2.prevAmb,.5);G2.prevAmb=null;if(keepAmb)sndVol(amb,ambV,.5);else{play(amb,ambV);try{AUD[amb].loop=true}catch(e){}}
+  later(qd||0,function(){musicHold(true);var keepAmb=G2.prevAmb===amb;if(G2.prevAmb&&!keepAmb)fadeSnd(G2.prevAmb,.5);G2.prevAmb=null;if(keepAmb)sndVol(amb,ambV,.5);else play(amb,ambV);
   say(idx*2,function(){
     VE.setAttribute("opacity",0);anim(.6,function(u){VE.setAttribute("opacity",(.4*eio(u)).toFixed(3))});bgBlur(true);
     later(.6,function(){ticks=ticks.filter(function(f){return f!==o.tick})});
@@ -1270,7 +1293,7 @@ function round1(R,idx,cb,fadeIn,qd){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),
         T.g.remove();drawItem(T.it,K,null);if(T.it.onWear)T.it.onWear(K);play(DRESS_SND);anim(.3,function(u){K.sq=Math.sin(Math.PI*u)*.025});worn++;
         if(worn>=need)later(.6,finish);else canDrag=true})}
     else{var x0=T.cx,y0=T.cy;anim(.2,function(u){var e=eio(u);T.cx=lerp(x0,T.home.x,e);T.cy=lerp(y0,T.home.y,e);T.s=lerp(T.s0*1.08,T.s0,e);placeTile(T)})}};
-  function finish(){var aa=AUD[amb];if(aa&&aa.paused){play(amb,ambV*.35);try{aa.loop=true}catch(e){}}sndVol(amb,ambV,1.0);var cb0=cb;cb=function(){fadeSnd(amb,1.5);G2.prevAmb=null;cb0()};anim(1.8,function(u){var e=eio(u);CAM=[lerp(0,77,e),lerp(0,51,e),lerp(1536,1382,e),lerp(1024,921,e)]},null,.3);bgBlur(false);ticks.push(o.tick);anim(.6,function(u){VE.setAttribute("opacity",(.4*(1-eio(u))).toFixed(3));TL.setAttribute("opacity",(1-eio(u)).toFixed(2))});
+  function finish(){if(!elFor(amb))play(amb,ambV*.35);sndVol(amb,ambV,1.0);var cb0=cb;cb=function(){fadeSnd(amb,1.5);G2.prevAmb=null;cb0()};anim(1.8,function(u){var e=eio(u);CAM=[lerp(0,77,e),lerp(0,51,e),lerp(1536,1382,e),lerp(1024,921,e)]},null,.3);bgBlur(false);ticks.push(o.tick);anim(.6,function(u){VE.setAttribute("opacity",(.4*(1-eio(u))).toFixed(3));TL.setAttribute("opacity",(1-eio(u)).toFixed(2))});
     later(.5,function(){CARTOONS[R.cartoon]?CARTOONS[R.cartoon](K,o,{g:g},cb):R.cartoon==="bubbles"?cartoonBubbles():R.cartoon==="puddle"?cartoonPuddle():R.cartoon==="snowball"?snowballCartoon(K,o,FX,cb):leavesCartoon(K,o,FX,cb)})}
   function cartoonBubbles(){var A1=K.arms[1],P1=K.pose[1],tmp={x:50,a:0,b:0};g.appendChild(o.bubL);
     /* палочка для пузырей в правой руке, колечко у рта */
@@ -1286,8 +1309,8 @@ function round1(R,idx,cb,fadeIn,qd){var g=el("g",{},ROOT),bgG=el("g",{},BGROOT),
     anim(.6,function(u){var e=eio(u);armTo(tmp,lerp(60,90,e),lerp(-150,-292,e),1);P1.a=lerp(-10,tmp.a,e);P1.b=lerp(0,tmp.b,e);W.setAttribute("opacity",Math.min(1,u*3).toFixed(2))},function(){
       emit=true;K.p.blow=true;play("bubbles",.5);later(3.0,function(){play("bubbles",.5)});anim(5.6,function(u){K.p.tilt=Math.sin(u*Math.PI*5)*2},function(){emit=false;K.p.blow=false;K.p.happy=true;
         anim(.5,function(u){var e=eio(u);P1.a=lerp(tmp.a,-10,e);P1.b=lerp(tmp.b,0,e)},function(){W.remove();W.done=true;later(.5,cb)})})})}
-  function cartoonPuddle(){var x0=K.x,x1=920,L=K.pose[-1],a=AUD.splash,LT=[0,.5,1.15,1.8],t0=clock,tt=0,land=0;play("splash",.4);
-    var live=function(){var at=(a&&!a.paused&&a.currentTime>0)?a.currentTime:0;tt=Math.max(tt,at||clock-t0);
+  function cartoonPuddle(){var x0=K.x,x1=920,L=K.pose[-1],LT=[0,.5,1.15,1.8],t0=clock,tt=0,land=0,a=play("splash",.4);
+    var live=function(){var at=(a&&a.__k==="splash"&&!a.paused&&a.currentTime>0)?a.currentTime:0;tt=Math.max(tt,at||clock-t0);
       if(tt>=1.8){if(land<3){land=3;splash(K.x,950,.9);anim(.18,function(u){K.sq=Math.sin(Math.PI*u)*.06})}K.hop=0;L.a=10;ticks=ticks.filter(function(f){return f!==live});K.p.happy=true;later(.5,cb);return}
       var j=tt<.5?0:tt<1.15?1:2,u=(tt-LT[j])/(LT[j+1]-LT[j]);if(j>land){land=j;splash(K.x,950,.9);anim(.18,function(v){K.sq=Math.sin(Math.PI*v)*.06})}
       if(j===0)K.x=lerp(x0,x1,eio(u));K.hop=Math.sin(Math.PI*u)*(j===0?120:80);L.a=lerp(10,j===0?60:50,Math.sin(Math.PI*u))};
@@ -1318,7 +1341,7 @@ function $id(i){return document.getElementById(i)}
 function mark(){}
 var mode="intro",started=false,loadedReady=false,STAGE=$id("sg-stage");
 function reset(keepStars){tok++;tw=[];ticks=[];kids=[];splashes=[];ROOT.innerHTML="";FX.innerHTML="";BGROOT.innerHTML="";bgBlur(false);musicHold(true);drag=null;G2={};camFn=null;CAM=[0,0,1536,1024];
-  Object.keys(AUD).forEach(function(k){if(k!=="star"&&k!=="fanfare")try{AUD[k].pause()}catch(e){}});Object.keys(VOICE).forEach(function(k){try{VOICE[k].pause()}catch(e){}});
+  stopAll(true);
   if(!keepStars)starBacks.forEach(function(b){b.classList.remove("sg-earned","sg-pulse")});BIG.style.display="none"}
 function prepare(keepStars){reset(keepStars);
   if(mode==="intro"){setScript(INTRO_SCRIPT);buildIntro();show(S1);
@@ -1334,7 +1357,7 @@ function goStar(n){var t0=Date.now();(function w(){/* сначала даём д
   var c=CAM.slice(),N=[77,51,1382,921],k=N[2]/c[2],tr="translate("+f1(N[0]-c[0]*k)+" "+f1(N[1]-c[1]*k)+") scale("+k.toFixed(4)+")";
   var oG=el("g",{transform:tr}),oB=el("g",{transform:tr});while(ROOT.firstChild)oG.appendChild(ROOT.firstChild);while(BGROOT.firstChild)oB.appendChild(BGROOT.firstChild);FX.innerHTML="";
   tok++;tw=[];ticks=[];kids=[];splashes=[];camFn=null;drag=null;musicHold(true);
-  Object.keys(AUD).forEach(function(q){if(q!=="star"&&q!=="fanfare")try{AUD[q].pause()}catch(e){}});Object.keys(VOICE).forEach(function(q){try{VOICE[q].pause()}catch(e){}});
+  stopAll(true);
   ROOT.appendChild(oG);BGROOT.appendChild(oB);G2={prev:{g:oG,bg:oB}};CAM=N.slice();
   mode="star";CUR_STAR=n;START_R=0;setScript(starScript());earnedBefore();runStar2()})()}
 function afterStar(){if(mode==="intro"){goStar(2);return}if(CUR_STAR<4){goStar(CUR_STAR+1);return}
@@ -1347,14 +1370,14 @@ $id("sg-nextbtn").addEventListener("click",function(){try{window.top.location.hr
 /* 🔊 — повторить последнюю фразу; 🎶 — фоновая музыка (по умолчанию выключена) */
 /* 🔊 в звёздах 2–4 повторяет условие раунда («Мы идём в спортзал»), затем задание */
 $id("sg-repeat").addEventListener("click",function(){if(!started||LASTI==null||!SCRIPT[LASTI])return;
-  if(Object.keys(VOICE).some(function(k){return !VOICE[k].paused}))return;var i=LASTI;
+  if(voiceBusy())return;var i=LASTI;
   if(mode!=="intro"&&i%2===1)i--;var d=sayVoice(SCRIPT[i].v)||voiceLen(SCRIPT[i].txt);
   if(mode!=="intro"&&SCRIPT[i+1])later(d,function(){sayVoice(SCRIPT[i+1].v)})});
 $id("sg-music").addEventListener("click",function(){musicOn=!musicOn;this.classList.toggle("sg-off",!musicOn);musicHold(musicHeld)});
 /* вкладка скрыта — звук на паузу, вернулись — продолжаем то, что играло */
 var hiddenPlaying=[];
 document.addEventListener("visibilitychange",function(){
-  if(document.hidden){hiddenPlaying=[];Object.keys(AUD).map(function(k){return AUD[k]}).concat(Object.keys(VOICE).map(function(k){return VOICE[k]})).forEach(function(a){if(!a.paused){hiddenPlaying.push(a);try{a.pause()}catch(e){}}})}
+  if(document.hidden){hiddenPlaying=[];SALL.forEach(function(a){if(!a.paused){hiddenPlaying.push(a);try{a.pause()}catch(e){}}})}
   else{hiddenPlaying.forEach(function(a){var p=a.play();if(p&&p.catch)p.catch(function(){})});hiddenPlaying=[]}});
 
 /* ───────── загрузка: всё скачивается заранее в память (blob), полоска — собачка ───────── */
@@ -1365,7 +1388,8 @@ function grab(u,ok,bad){fetch(u).then(function(r){if(!r.ok)throw 0;return r.blob
 (function(){var urls=[],seen={};Object.keys(A.snd).forEach(function(k){var u=A.snd[k];if(!seen[u]){seen[u]=1;urls.push(u)}});urls=urls.concat(PRAISE);
   total=urls.length+VNAMES.length+1;
   urls.forEach(function(u){grab(u,function(x){objUrls[u]=x;tickLoad()},tickLoad)});
-  VNAMES.forEach(function(k){grab(REPO+k+".m4a",function(x){VURL[k]=x;tickLoad()},tickLoad)});
+  VNAMES.forEach(function(k){var u=REPO+k+".m4a";fetch(u).then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()}).then(function(b){var d=mp4Dur(b);if(d)VDUR[k]=d;
+    var x=u;try{x=URL.createObjectURL(new Blob([b],{type:"audio/mp4"}))}catch(e){}VURL[k]=x;tickLoad()}).catch(function(){VURL[k]=u;tickLoad()})});
   var im=new Image();im.onload=im.onerror=tickLoad;im.src=A.star})();
 function onLoaded(){$id("sg-loading").style.display="none";loadedReady=true;if(isPhone())syncMobileUI();else $id("sg-start-overlay").style.display="flex"}
 $id("sg-start-btn").addEventListener("click",function(){$id("sg-start-overlay").style.display="none";unlock();started=true;syncMobileUI();prepare(false);later(.6,runIntro)});
