@@ -406,7 +406,9 @@ function makeGirl(parent){var G={x:1560,p:{},view:"side"},root=el("g",{},parent)
   G.soft=soft;G.fist=fist;
   G.armL={x:-50,a:10,b:0};G.armR={x:50,a:-10,b:0,th:false};
   G.top=el("g",{},G.turn);                 /* футболка в руках — поверх всего */
-  G.turn.setAttribute("filter","url(#dsP)");  /* мягкая тень на всю фигуру */
+  if(!document.getElementById("dsG")){var fl=el("filter",{id:"dsG",filterUnits:"userSpaceOnUse",x:-190,y:-650,width:380,height:710,"color-interpolation-filters":"sRGB"},DEFS);
+    el("feDropShadow",{dx:0,dy:11,stdDeviation:15,"flood-color":"#2C3A5C","flood-opacity":.28},fl)}
+  G.turn.setAttribute("filter","url(#dsG)");  /* мягкая тень на всю фигуру; область — фигура с запасом (меньше — быстрее на iPad) */
   G.blinkAt=2;return G}
 function wearTee(G){drawItem(TEE,G.K)}
 function poseGirl(G,t){var p=G.p;G.root.setAttribute("transform","translate("+f1(G.x)+" "+GY+") scale("+GS+")");
@@ -427,11 +429,21 @@ function poseGirl(G,t){var p=G.p;G.root.setAttribute("transform","translate("+f1
   G.sh.setAttribute("rx",f1(66-bob*.8))}
 
 /* мебель: тени одним тоном и мягкая тень крупного предмета (сдвиг 11, размытие 15, 0,4); область — предмет с запасом */
-function bigShadow(id,x,y,w,h){var f=el("filter",{id:id,filterUnits:"userSpaceOnUse",x:x,y:y,width:w,height:h,"color-interpolation-filters":"sRGB"},DEFS);
-  el("feDropShadow",{dx:0,dy:11,stdDeviation:15,"flood-color":"#2C3A5C","flood-opacity":.4},f)}
-function styleRoom(R){bigShadow("bigWD",-40,60,720,880);bigShadow("bigWM",940,330,560,640);bigShadow("bigBD",950,520,600,440);
-  shadeAll(R.WD);R.WD.setAttribute("filter","url(#bigWD)");shadeAll(R.WM);R.WMo.setAttribute("filter","url(#bigWM)");
-  shadeAll(R.BOARD);R.BOARD.setAttribute("filter","url(#bigBD)");shadeAll(R.IRONL)}
+/* мягкая тень мебели запекается один раз в картинку (canvas), а не фильтром: фильтр на iPad пересчитывается
+   каждый кадр, когда едет камера или крутится барабан, и сцена тормозит */
+function rrD(x,y,w,h,r){return "M"+(x+r)+" "+y+" H"+(x+w-r)+" Q"+(x+w)+" "+y+" "+(x+w)+" "+(y+r)+" V"+(y+h-r)+" Q"+(x+w)+" "+(y+h)+" "+(x+w-r)+" "+(y+h)+" H"+(x+r)+" Q"+x+" "+(y+h)+" "+x+" "+(y+h-r)+" V"+(y+r)+" Q"+x+" "+y+" "+(x+r)+" "+y+"Z"}
+function bakeShadow(parent,shapes,x0,y0,w,h){var k=.5,pad=60,cw=Math.ceil((w+2*pad)*k),ch=Math.ceil((h+2*pad)*k),c=document.createElement("canvas");c.width=cw;c.height=ch;
+  var g=c.getContext("2d");if(!g||!window.Path2D)return;var BIG=4000;
+  g.shadowColor="rgba(44,58,92,.4)";g.shadowBlur=30*k;g.shadowOffsetX=BIG;g.shadowOffsetY=11*k;
+  g.setTransform(k,0,0,k,(pad-x0)*k-BIG,(pad-y0)*k);g.fillStyle="#000";g.strokeStyle="#000";g.lineCap="round";g.lineJoin="round";
+  shapes.forEach(function(q){var p=new Path2D(q.d);if(q.w){g.lineWidth=q.w;g.stroke(p)}if(!q.line)g.fill(p)});
+  var im=el("image",{x:x0-pad,y:y0-pad,width:cw/k,height:ch/k,preserveAspectRatio:"none","pointer-events":"none"},null),u=c.toDataURL("image/png");
+  im.setAttribute("href",u);im.setAttributeNS("http://www.w3.org/1999/xlink","xlink:href",u);parent.insertBefore(im,parent.firstChild)}
+function styleRoom(R){
+  bakeShadow(R.WD,[{d:rrD(72,126,506,36,14)},{d:rrD(90,150,470,696,16)},{d:"M90 165 L34 196 L34 808 L90 838 Z",w:12},{d:"M560 165 L616 196 L616 808 L560 838 Z",w:12},{d:rrD(106,834,32,40,14)},{d:rrD(512,834,32,40,14)}],20,120,610,760);
+  bakeShadow(R.WM,[{d:rrD(1022,876,36,22,8)},{d:rrD(1382,876,36,22,8)},{d:rrD(1000,380,440,504,34)}],990,370,460,530);
+  bakeShadow(R.BOARD,[{d:"M1090 612 L1350 880 M1350 612 L1090 880",w:12,line:1},{d:rrD(1068,872,44,14,7)},{d:rrD(1328,872,44,14,7)},{d:"M1004 598 Q1004 582 1030 580 H1360 Q1462 584 1474 598 Q1462 612 1360 616 H1030 Q1004 614 1004 598Z"},{d:"M1004 606 Q1004 592 1030 590 H1360 Q1462 594 1474 606 Q1462 622 1360 626 H1030 Q1004 622 1004 606Z"}],990,570,500,330);
+  shadeAll(R.WD);shadeAll(R.WM);shadeAll(R.BOARD);shadeAll(R.IRONL)}
 return {shadeAll:shadeAll,styleRoom:styleRoom,makeGirl:makeGirl,poseGirl:poseGirl,wearTee:wearTee,armTo:armTo,handPos:handPos,GS:GS,GY:GY}})();
 KID.styleRoom({WD:WD,WM:WM,WMo:WMo,BOARD:BOARD,IRONL:IRONL});
 
@@ -608,14 +620,14 @@ function buildAudio(){Object.keys(SND).forEach(function(k){var a=new Audio();a.p
   STEPS=[0,1,2].map(function(){var a=new Audio();a.preload="auto";a.src=srcFor(SND.step);return a})}
 /* шаг звучит в момент, когда нога касается пола — из самой анимации, а не одним файлом */
 function playStep(){if(!soundOn||!STEPS.length)return;var a=STEPS[stepI++%3];try{a.currentTime=0}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){})}
-function play(k){if(!soundOn)return;var a=AUD[k];if(!a)return;try{a.pause();a.currentTime=0}catch(e){}var p=a.play();if(p&&p.catch)p.catch(function(){})}
+function play(k){if(!soundOn)return;var a=AUD[k];if(!a)return;try{a.pause();a.currentTime=0}catch(e){}a.muted=false;a.__playing=true;var p=a.play();if(p&&p.catch)p.catch(function(){})}
 var SILENT="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA=";
 function unlockSpeech(){try{speechEl.src=SILENT;speechEl.__u=null;var p=speechEl.play();if(p&&p.then)p.then(function(){cueVoice("clean")}).catch(function(){cueVoice("clean")})}catch(e){}}
-/* разблокировка как в «Гардеробе 2»: каждый плеер играет беззвучный файл и сразу останавливается, потом в него возвращается свой звук
-   (настоящие звуки с muted на iPad иногда звучали разом) */
-function unlock(){unlockSpeech();Object.keys(AUD).map(function(k){return AUD[k]}).concat(STEPS).forEach(function(a){var u=a.src;a.__ul=1;
-  var done=function(){if(!a.__ul)return;a.__ul=0;try{a.pause()}catch(e){}a.src=u};
-  try{a.src=SILENT;var p=a.play();if(p&&p.then)p.then(done,done);else done()}catch(e){done()}})}
+/* разблокировка: каждый звук запускается в нажатии «Начать» без громкости и сразу, в том же нажатии, останавливается
+   (если ждать ответа браузера, на iPad звуки иногда звучали разом); src плееров не трогаем */
+function unlock(){unlockSpeech();Object.keys(AUD).map(function(k){return AUD[k]}).concat(STEPS).forEach(function(a){var p=null;a.muted=true;
+  try{p=a.play()}catch(e){}try{a.pause();a.currentTime=0}catch(e){}
+  var fin=function(){if(!a.__playing){try{a.pause();a.currentTime=0}catch(e){}}a.muted=false};if(p&&p.then)p.then(fin,fin);else fin()})}
 
 /* ───────── анимации ───────── */
 var tw=[],clock=0;
