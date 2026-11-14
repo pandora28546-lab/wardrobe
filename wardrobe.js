@@ -886,7 +886,10 @@ function introFinale(){var tk=intro.tok;holdMusic(true);intro.items.forEach(func
        anim(1,function(u){tee.g.setAttribute("transform","translate(279 232) rotate("+f1(12*Math.exp(-u*3)*Math.cos(u*12))+")")})},
      d:.7,u:function(u){var e=eio(u),tx=lerp(hx,-62,e),ty=lerp(hy,-240,e);armTo(G.sReach,tx,ty,-1);G.p.tilt=8*(1-e);var h=handPos(G.sReach);teeAt(h.x+6,h.y-10,lerp(.42,.5,e),lerp(.42,.5,e))}},
     /* 4. поворачивается к нам; камера начинает наезд */
-    {d:.2,u:function(u){G.p.turn=1-.95*eio(u)}},
+    /* на крупном плане мягкие тени девочки и вещей в шкафу выключаем: при наезде камеры и увеличении в 2,7 раза
+       они пересчитываются каждый кадр и на iPad тормозят. Выключаем в момент поворота — переход не заметен;
+       овал под ногами и тени одним тоном остаются */
+    {go:function(){G.turn.removeAttribute("filter");[].forEach.call(W.querySelectorAll("[filter]"),function(e){e.removeAttribute("filter")})},d:.2,u:function(u){G.p.turn=1-.95*eio(u)}},
     {go:function(){G.view="front";G.p={turn:.05};armTo(G.armL,-46,-250,1);armTo(G.armR,46,-250,-1);teeAt(0,-250,.62,.62)},d:.22,u:function(u){G.p.turn=.05+.95*eio(u)}},
     {d:.6,u:function(u){camTo(camLerp(CAM0,CAM1,eio(u)))}},
     /* 5. поднимает над головой */
