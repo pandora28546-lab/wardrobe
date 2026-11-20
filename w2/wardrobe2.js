@@ -270,8 +270,10 @@ function wardrobeRoom(){var g=el("g",{},null),o={g:g};
    Здесь то же самое фильтром SVG: для людей (окно 1536 по ширине, на экране ≈ 820 px) — сдвиг 11 и размытие 15, для вещей — 6 и 8. */
 (function(){[["dsP",11,15,.28],["dsI",6,8,.4]].forEach(function(f){var fl=el("filter",f[0]==="dsP"?{id:f[0],filterUnits:"userSpaceOnUse",x:-420,y:-720,width:840,height:820,"color-interpolation-filters":"sRGB"}:{id:f[0],x:"-40%",y:"-30%",width:"180%",height:"170%","color-interpolation-filters":"sRGB"},DEFS);
   el("feDropShadow",{dx:0,dy:f[1],stdDeviation:f[2],"flood-color":"#2C3A5C","flood-opacity":f[3]},fl)})})();
+/* в полноэкранном режиме мягкая тень детей (dsP) выключена: на большом экране она пересчитывается каждый кадр, пока движется камера, и анимация идёт рывками; тени вещей (dsI) остаются */
+function fsLite(){return typeof isFS==="function"&&isFS()}
 function castShadow(src,parent,dx,dy,op,r){var id=(r!=null&&r<8)?"dsI":"dsP",C={on:true,last:true};src.setAttribute("filter","url(#"+id+")");
-  C.sync=function(){if(C.on!==C.last){C.last=C.on;if(C.on)src.setAttribute("filter","url(#"+id+")");else src.removeAttribute("filter")}};
+  C.sync=function(){var on=C.on&&!(id==="dsP"&&fsLite());if(on!==C.last){C.last=on;if(on)src.setAttribute("filter","url(#"+id+")");else src.removeAttribute("filter")}};
   C.rebuild=function(){};C.remove=function(){src.removeAttribute("filter")};return C}
 
 /* ───────── стиль 2: люди как на странице «Девочка и мальчик — проекции и эмоции» ─────────
@@ -1060,7 +1062,7 @@ function say(i,cb){LASTV=SCRIPT[i].v;LASTI=i;var d=sayVoice(SCRIPT[i].v)||voiceL
 var CAM=[0,0,1536,1024],camFn=null;
 var BGSVG=document.getElementById("sg-bg"),BGROOT=null;
 var camV="";function applyCam(){var v=CAM.map(f1).join(" ");if(v===camV)return;camV=v;SVG.setAttribute("viewBox",v);BGSVG.setAttribute("viewBox",v)}
-function bgBlur(on){BGSVG.style.filter=on?"blur("+Math.max(4,Math.round(GAME.offsetWidth*.009))+"px)":"none"}
+function bgBlur(on){BGSVG.style.filter=on?"blur("+Math.max(4,Math.min(7,Math.round(GAME.offsetWidth*.009)))+"px)":"none"/* не сильнее, чем в обычном окне (820 px): на весь экран сильное размытие дорого снимать */}
 function panTo(c,d,cb){var c0=CAM.slice();camFn=null;anim(d,function(u){var e=eio(u);CAM=c0.map(function(v,i){return lerp(v,c[i],e)})},cb)}
 
 /* ───────── слои ───────── */
@@ -1095,9 +1097,8 @@ function runS1(o,cb){var t0=clock,c0=[0,0,1536,1024],c1=[170,110,1196,797];CAM=c
   camFn=function(){var u=clamp((clock-t0)/10.4,0,1),e=eio(u);CAM=[o.x0+lerp(c0[0],c1[0],e),lerp(c0[1],c1[1],e),lerp(c0[2],c1[2],e),lerp(c0[3],c1[3],e)]};
   o.live=function(t){var hx=o.headX||0,ht=o.headT||0;o.H.setAttribute("transform","translate("+f1(hx)+" -386) rotate("+f1(ht)+")");
     o.B.setAttribute("transform","scale(1 "+(1+Math.sin(t*2.2)*.006).toFixed(3)+")");
-    [-1,1].forEach(function(s){var tr="rotate("+f1(s*Math.sin(t*3)*4)+" "+(s<0?109:291)+" 212)";o["tail"+s].setAttribute("transform",tr);o["band"+s].setAttribute("transform",tr);var A=o.arms[s],P=o.pose[s];A.up.setAttribute("transform","rotate("+f1(P.a)+")");A.fo.setAttribute("transform","translate(0 70) rotate("+f1(P.b)+")")});if(o.cast){o.cast.on=!(typeof isFS==="function"&&isFS());o.cast.sync()}};
+    [-1,1].forEach(function(s){var tr="rotate("+f1(s*Math.sin(t*3)*4)+" "+(s<0?109:291)+" 212)";o["tail"+s].setAttribute("transform",tr);o["band"+s].setAttribute("transform",tr);var A=o.arms[s],P=o.pose[s];A.up.setAttribute("transform","rotate("+f1(P.a)+")");A.fo.setAttribute("transform","translate(0 70) rotate("+f1(P.b)+")")});if(o.cast)o.cast.sync()};
   ticks.push(o.live);
-  /* в полноэкранном режиме мягкая тень девочки выключена: на большом экране подъезд камеры с ней идёт рывками */
   /* смотрит на шкаф и размышляет: голова медленно поворачивается к одной вещи, к другой, чуть наклоняется */
   anim(1.6,function(u){var e=eio(u);o.headX=-14*e;o.headT=-7*e},null,.6);
   var fin1=false,end1=function(){if(fin1)return;fin1=true;ticks=ticks.filter(function(f){return f!==o.live});cb()};
