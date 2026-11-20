@@ -1452,9 +1452,9 @@ var rzT=null;window.addEventListener("resize",function(){if(rzT)clearTimeout(rzT
 syncMobileUI();refreshFsBtn();
 prepare(false);
 
-/* ───────── кадр: шаг не больше 34 мс, провалы не догоняем ───────── */
+/* ───────── кадр: часы игры идут по реальному времени (шаг до 100 мс), чтобы анимация не отставала от звука при медленной отрисовке ───────── */
 var last=performance.now();
-function frame(now){var dt=Math.min(.034,(now-last)/1000);last=now;step(dt,started);requestAnimationFrame(frame)}
+function frame(now){var dt=Math.min(.1,(now-last)/1000);last=now;step(dt,started);requestAnimationFrame(frame)}
 function step(dt,run){if(run){clock+=dt;stepTw()}if(camFn)camFn();applyCam();ticks.forEach(function(f){f(clock,run?dt:0)});kids.forEach(function(K){poseKid(K,clock)});drawSplash(dt)}
 requestAnimationFrame(frame);
 /* для проверки в консоли: __sg.star(n) — сразу к звезде n (2–4), __sg.ff(сек) — промотать время */

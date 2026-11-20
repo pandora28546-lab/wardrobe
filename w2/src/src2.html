@@ -1484,7 +1484,7 @@ document.getElementById("sg-fs").addEventListener("click",function(){var r=GAME.
 document.getElementById("rsw").hidden=true;prepare();
 
 var last=performance.now();
-function frame(now){var dt=Math.min(.034,(now-last)/1000);last=now;step(dt,started);requestAnimationFrame(frame)}
+function frame(now){var dt=Math.min(.1,(now-last)/1000);last=now;step(dt,started);requestAnimationFrame(frame)}
 function step(dt,run){if(run){clock+=dt;stepTw()}if(camFn)camFn();applyCam();ticks.forEach(function(f){f(clock,run?dt:0)});kids.forEach(function(K){poseKid(K,clock)});drawSplash(dt)}
 requestAnimationFrame(frame);
 window.__sg={ff:function(sec){var n=Math.round(sec/.03);for(var i=0;i<n;i++)step(.03,true)},mode:setMode,start:start,G2:function(){return G2},drop:function(key){/* для проверки: надеть вещь как будто перетащили */}};
