@@ -1095,8 +1095,9 @@ function runS1(o,cb){var t0=clock,c0=[0,0,1536,1024],c1=[170,110,1196,797];CAM=c
   camFn=function(){var u=clamp((clock-t0)/10.4,0,1),e=eio(u);CAM=[o.x0+lerp(c0[0],c1[0],e),lerp(c0[1],c1[1],e),lerp(c0[2],c1[2],e),lerp(c0[3],c1[3],e)]};
   o.live=function(t){var hx=o.headX||0,ht=o.headT||0;o.H.setAttribute("transform","translate("+f1(hx)+" -386) rotate("+f1(ht)+")");
     o.B.setAttribute("transform","scale(1 "+(1+Math.sin(t*2.2)*.006).toFixed(3)+")");
-    [-1,1].forEach(function(s){var tr="rotate("+f1(s*Math.sin(t*3)*4)+" "+(s<0?109:291)+" 212)";o["tail"+s].setAttribute("transform",tr);o["band"+s].setAttribute("transform",tr);var A=o.arms[s],P=o.pose[s];A.up.setAttribute("transform","rotate("+f1(P.a)+")");A.fo.setAttribute("transform","translate(0 70) rotate("+f1(P.b)+")")});if(o.cast)o.cast.sync()};
+    [-1,1].forEach(function(s){var tr="rotate("+f1(s*Math.sin(t*3)*4)+" "+(s<0?109:291)+" 212)";o["tail"+s].setAttribute("transform",tr);o["band"+s].setAttribute("transform",tr);var A=o.arms[s],P=o.pose[s];A.up.setAttribute("transform","rotate("+f1(P.a)+")");A.fo.setAttribute("transform","translate(0 70) rotate("+f1(P.b)+")")});if(o.cast){o.cast.on=!(typeof isFS==="function"&&isFS());o.cast.sync()}};
   ticks.push(o.live);
+  /* в полноэкранном режиме мягкая тень девочки выключена: на большом экране подъезд камеры с ней идёт рывками */
   /* смотрит на шкаф и размышляет: голова медленно поворачивается к одной вещи, к другой, чуть наклоняется */
   anim(1.6,function(u){var e=eio(u);o.headX=-14*e;o.headT=-7*e},null,.6);
   var fin1=false,end1=function(){if(fin1)return;fin1=true;ticks=ticks.filter(function(f){return f!==o.live});cb()};
