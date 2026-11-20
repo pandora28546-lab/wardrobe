@@ -270,9 +270,9 @@ function wardrobeRoom(){var g=el("g",{},null),o={g:g};
    Здесь то же самое фильтром SVG: для людей (окно 1536 по ширине, на экране ≈ 820 px) — сдвиг 11 и размытие 15, для вещей — 6 и 8. */
 (function(){[["dsP",11,15,.28],["dsI",6,8,.4]].forEach(function(f){var fl=el("filter",f[0]==="dsP"?{id:f[0],filterUnits:"userSpaceOnUse",x:-420,y:-720,width:840,height:820,"color-interpolation-filters":"sRGB"}:{id:f[0],x:"-40%",y:"-30%",width:"180%",height:"170%","color-interpolation-filters":"sRGB"},DEFS);
   el("feDropShadow",{dx:0,dy:f[1],stdDeviation:f[2],"flood-color":"#2C3A5C","flood-opacity":f[3]},fl)})})();
-/* в полноэкранном режиме мягкая тень детей (dsP) выключена: на большом экране она пересчитывается каждый кадр, пока движется камера, и анимация идёт рывками; тени вещей (dsI) остаются */
-var BGBLUR=false;/* пока ребёнка одевают (фон размыт), мягкая тень остаётся и в полноэкранном режиме — без неё ребёнок сливается с фоном */
-function fsLite(){return !BGBLUR&&typeof isFS==="function"&&isFS()}
+/* в полноэкранном режиме во вступлении мягкая тень детей (dsP) выключена: на большом экране она пересчитывается каждый кадр, пока движется камера, и анимация идёт рывками; тени вещей (dsI) остаются */
+/* только во вступлении: в раундах (одевание, подъезд камеры, мультик) тень нужна — без неё ребёнок сливается с размытым фоном, а её выключение посреди раунда заметно */
+function fsLite(){return typeof isFS==="function"&&isFS()&&typeof mode!=="undefined"&&mode==="intro"}
 function castShadow(src,parent,dx,dy,op,r){var id=(r!=null&&r<8)?"dsI":"dsP",C={on:true,last:true};src.setAttribute("filter","url(#"+id+")");
   C.sync=function(){var on=C.on&&!(id==="dsP"&&fsLite());if(on!==C.last){C.last=on;if(on)src.setAttribute("filter","url(#"+id+")");else src.removeAttribute("filter")}};
   C.rebuild=function(){};C.remove=function(){src.removeAttribute("filter")};return C}
@@ -1063,7 +1063,7 @@ function say(i,cb){LASTV=SCRIPT[i].v;LASTI=i;var d=sayVoice(SCRIPT[i].v)||voiceL
 var CAM=[0,0,1536,1024],camFn=null;
 var BGSVG=document.getElementById("sg-bg"),BGROOT=null;
 var camV="";function applyCam(){var v=CAM.map(f1).join(" ");if(v===camV)return;camV=v;SVG.setAttribute("viewBox",v);BGSVG.setAttribute("viewBox",v)}
-function bgBlur(on){BGBLUR=!!on;BGSVG.style.filter=on?"blur("+Math.max(4,Math.min(7,Math.round(GAME.offsetWidth*.009)))+"px)":"none"/* не сильнее, чем в обычном окне (820 px): на весь экран сильное размытие дорого снимать */}
+function bgBlur(on){BGSVG.style.filter=on?"blur("+Math.max(4,Math.min(7,Math.round(GAME.offsetWidth*.009)))+"px)":"none"/* не сильнее, чем в обычном окне (820 px): на весь экран сильное размытие дорого снимать */}
 function panTo(c,d,cb){var c0=CAM.slice();camFn=null;anim(d,function(u){var e=eio(u);CAM=c0.map(function(v,i){return lerp(v,c[i],e)})},cb)}
 
 /* ───────── слои ───────── */
